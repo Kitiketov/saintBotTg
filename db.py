@@ -108,8 +108,18 @@ async def write_pairs(pairs,room_iden):
     for pair in pairs:
         cur.execute(f"INSERT INTO {room_iden}_saint (saint_user_id,reciver_user_id) VALUES ({pair}, {pairs[pair]})")
     db.commit()
+
 async def start_event(room_iden):
     cur.execute(f"UPDATE rooms SET status == TRUE WHERE room_id == '{room_iden[-4:]}' AND room_name == '{room_iden[:-4]}'")
     db.commit()
+
+async def who_gives(room_iden,user_id):
+    pair = cur.execute(f"SELECT * FROM {room_iden}_saint WHERE saint_user_id == {user_id}").fetchone()
+    return pair[1]
+
+async def isStarted(room_iden):
+    _,_,status,_ = cur.execute(f"SELECT * FROM rooms WHERE room_id == '{room_iden[-4:]}' AND room_name == '{room_iden[:-4]}'").fetchone()
+    return status
+
 if __name__ == "__main__":
     asyncio.run(start_db())
