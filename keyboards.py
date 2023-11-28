@@ -47,19 +47,19 @@ my_rooms_kb = [
 async def rooms_kb(rooms_idens,asAdmin):
     builder = InlineKeyboardBuilder()
     for room_iden in rooms_idens:
-        builder.adjust(1)
         builder.button(text=f"{room_iden[:-4]}:{room_iden[-4:]}",callback_data=states.CallbackFactory(action="show_room",room_iden=room_iden,asAdmin=asAdmin).pack())
-    builder.adjust(1)
+        builder.adjust(1)
     builder.button(text="◀️Вернуться в меню", callback_data=states.CallbackFactory(action="back_to_menu",room_iden="None",asAdmin=False).pack())
+    builder.adjust(1)
     return builder.as_markup()
 
 async def member_keyboard(members,room_iden):
     builder = InlineKeyboardBuilder()
     for member in members:
+        builder.button(text=f"{member[1]} {member[2]}",callback_data=states.RemoveCallbackFactory(action="remove_member",room_iden=room_iden,user_id=member[0]).pack())
         builder.adjust(1)
-        builder.button(text=f"{member[1]} @{member[3]}",callback_data=states.RemoveCallbackFactory(action="remove_member",room_iden=room_iden,user_id=member[0]).pack())
-    builder.adjust(1)
     builder.button(text="🚫Отмена",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=True).pack())
+    builder.adjust(1)
     return builder.as_markup()
 
 my_rooms_kb = InlineKeyboardMarkup(inline_keyboard=my_rooms_kb)

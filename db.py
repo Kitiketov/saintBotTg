@@ -8,7 +8,7 @@ db = sq.connect("database.db")
 cur = db.cursor()
 
 async def start_db():
-    cur.execute("CREATE TABLE IF NOT EXISTS rooms(room_id TEXT PRIMARY KEY,room_name TEXT,status BOOLEAN DEFAULT FALSE,admin INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS rooms(room_iden TEXT PRIMARY KEY,status BOOLEAN DEFAULT FALSE,admin INTEGER)")
     #cur.execute("CREATE TABLE IF NOT EXISTS mem(tg_user_id TEXT PRIMARY KEY)")
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id INTEGER PRIMARY KEY,first_name TEXT,last_name TEXT,username TEXT)")
     db.commit()
@@ -18,17 +18,17 @@ async def create_room(room_name,user_id):
     if all([a not in room_name for a in disvalid]) and room_name[0] not in "0123456789" and len(room_name)<=64:
         while True:
             room_id = f"{random.randint(1,9999):04}"
-            _room_id = cur.execute(f"SELECT * FROM rooms WHERE room_id =='{room_id}'").fetchone()
-            if not _room_id:
+            _room_iden = cur.execute(f"SELECT * FROM rooms WHERE room_iden =='{room_name}{room_id}'").fetchone()
+            if not _room_iden:
                 break
-        cur.execute(f"INSERT INTO rooms (room_id, room_name,admin) VALUES ('{room_id}', '{room_name}', {user_id})")
-        cur.execute(f"CREATE TABLE {room_name+room_id+'_mem'}(tg_user_id INTEGER PRIMARY KEY)")
-        cur.execute(f"CREATE TABLE {room_name+room_id+'_saint'}(saint_user_id INTEGER PRIMARY KEY,reciver_user_id INTEGER)")
+        cur.execute(f"INSERT INTO rooms (room_iden,admin) VALUES ('{room_name}{room_id}', {user_id})")
+        cur.execute(f"CREATE TABLE {room_name}{room_id}_mem (tg_user_id INTEGER PRIMARY KEY)")
+        cur.execute(f"CREATE TABLE {room_name}{room_id}_saint (saint_user_id INTEGER PRIMARY KEY,reciver_user_id INTEGER)")
 
-        _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name+room_id}'").fetchone()
+        _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
         if not _room:
-            cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name+room_id}')")
-        cur.execute(f"UPDATE rooms_{user_id} SET is_admin == TRUE WHERE room_iden == '{room_name+room_id}'")
+            cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name}{room_id}')")
+        cur.execute(f"UPDATE rooms_{user_id} SET is_admin == TRUE WHERE room_iden == '{room_name}{room_id}'")
 
         db.commit()
         return room_id
@@ -43,16 +43,16 @@ async def add_user(user):
 async def connect2room(raw_data,user_id):
     raw_data+=":"
     room_name, room_id,*_ = raw_data.split(":")
-    room = cur.execute(f"SELECT * FROM rooms WHERE room_id == '{room_id}' AND room_name == '{room_name}'").fetchone()
-    if room:
-        user = cur.execute(f"SELECT * FROM {room_name+room_id+'_mem'} WHERE tg_user_id == {user_id}").fetchone()
-        if not user:
-            cur.execute(f"INSERT INTO {room_name+room_id+'_mem'} (tg_user_id) VALUES ({user_id})")
+    _room = cur.execute(f"SELECT * FROM rooms WHERE room_iden == '{room_name}{room_id}'").fetchone()
+    if _room:
+        _user = cur.execute(f"SELECT * FROM {room_name}{room_id}_mem WHERE tg_user_id == {user_id}").fetchone()
+        if not _user:
+            cur.execute(f"INSERT INTO {room_name}{room_id}_mem (tg_user_id) VALUES ({user_id})")
 
-            _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name+room_id}'").fetchone()
+            _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
             if not _room:
-                cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name+room_id}')")
-            cur.execute(f"UPDATE rooms_{user_id} SET is_member == TRUE WHERE room_iden == '{room_name+room_id}'")
+                cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name}{room_id}')")
+            cur.execute(f"UPDATE rooms_{user_id} SET is_member == TRUE WHERE room_iden == '{room_name}{room_id}'")
 
             db.commit()
             return True
@@ -62,11 +62,11 @@ async def connect2room(raw_data,user_id):
 
 async def get_members_list(room_iden):
     
-    admin_raw= cur.execute(f"SELECT * FROM rooms WHERE room_id == '{room_iden[-4:]}' AND room_name == '{room_iden[:-4]}'").fetchone()
-    *_,admin_id =admin_raw
+    admin_raw = cur.execute(f"SELECT * FROM rooms WHERE room_iden == '{room_iden}'").fetchone()
+    *_,admin_id = admin_raw
     isAdminMember = False
     
-    member_id_list = cur.execute(f"SELECT * FROM {room_iden+'_mem'} ").fetchall()
+    member_id_list = cur.execute(f"SELECT * FROM {room_iden}_mem ").fetchall()
     admin = member = cur.execute(f"SELECT * FROM users WHERE tg_id == {admin_id}").fetchone()
 
     member_list = []
@@ -110,7 +110,7 @@ async def write_pairs(pairs,room_iden):
     db.commit()
 
 async def start_event(room_iden):
-    cur.execute(f"UPDATE rooms SET status == TRUE WHERE room_id == '{room_iden[-4:]}' AND room_name == '{room_iden[:-4]}'")
+    cur.execute(f"UPDATE rooms SET status == TRUE WHERE room_iden == '{room_iden}'")
     db.commit()
 
 async def who_gives(room_iden,user_id):
@@ -118,8 +118,11 @@ async def who_gives(room_iden,user_id):
     return pair[1]
 
 async def isStarted(room_iden):
-    _,_,status,_ = cur.execute(f"SELECT * FROM rooms WHERE room_id == '{room_iden[-4:]}' AND room_name == '{room_iden[:-4]}'").fetchone()
+    _,status,_ = cur.execute(f"SELECT * FROM rooms WHERE room_iden == '{room_iden}'").fetchone()
     return status
+
+async def get_user(user_id):
+    return cur.execute(f"SELECT * FROM users WHERE tg_id == {user_id}").fetchone()
 
 if __name__ == "__main__":
     asyncio.run(start_db())
