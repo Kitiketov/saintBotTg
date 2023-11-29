@@ -19,7 +19,7 @@ async def room_admin_keyboard(room_iden):
         [InlineKeyboardButton(text="✏️Изменить настройки комнаты", callback_data=states.CallbackFactory(action="edit_room_settings",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="❌Удалить комнату" , callback_data=states.CallbackFactory(action="delete_room",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="📛Удалить участника", callback_data=states.CallbackFactory(action="remove_member",room_iden=room_iden,asAdmin=True).pack())],
-        [InlineKeyboardButton(text="Создать приглашение", callback_data=states.CallbackFactory(action="create_invitation",room_iden=room_iden,asAdmin=True).pack())],
+        [InlineKeyboardButton(text="✉️Создать приглашение", callback_data=states.CallbackFactory(action="create_invitation",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="◀️Вернуться в меню", callback_data=states.CallbackFactory(action="back_to_menu",room_iden=room_iden,asAdmin=True).pack())]
     ]
     return InlineKeyboardMarkup(inline_keyboard=room_kb) 
@@ -68,7 +68,7 @@ async def member_keyboard(members,room_iden):
     return builder.as_markup()
 
 async def join_to_room(room_iden):
-    room_iden64 = base64.b64encode(bytes(room_iden,"utf-8")).decode()
+    room_iden64 = base64.urlsafe_b64encode(room_iden.encode()).decode().replace("=","")
     join_kb = [
     [InlineKeyboardButton(text="Я участвую",url = f"https://t.me/taini_santa_bot?start=join_to_room-{room_iden64}end_invitation")],
     ]
