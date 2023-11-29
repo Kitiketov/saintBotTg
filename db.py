@@ -101,6 +101,7 @@ async def delete_room(room_iden,admin_id):
         cur.execute(f"DELETE FROM rooms_{user_id[0]} WHERE room_iden == '{room_iden}'")
     cur.execute(f"DROP TABLE IF EXISTS {room_iden}_mem")
     cur.execute(f"DROP TABLE IF EXISTS {room_iden}_saint")
+    cur.execute(f"DELETE FROM rooms WHERE room_iden == '{room_iden}'")
     db.commit()
 
 async def write_pairs(pairs,room_iden):

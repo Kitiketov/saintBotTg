@@ -74,5 +74,12 @@ async def join_to_room(room_iden):
     ]
     return InlineKeyboardMarkup(inline_keyboard=join_kb)
 
+async def confirm_keyboard(room_iden,asAdmin):
+    confirm_kb = [
+        [InlineKeyboardButton(text="✅Да",callback_data=states.CallbackFactory(action="confirm_delete",room_iden=room_iden,asAdmin=asAdmin).pack()),
+         InlineKeyboardButton(text="🚫Нет",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=asAdmin).pack())]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=confirm_kb)
+
 my_rooms_kb = InlineKeyboardMarkup(inline_keyboard=my_rooms_kb)
 choice_kb = InlineKeyboardMarkup(inline_keyboard=choice_kb)

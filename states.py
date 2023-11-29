@@ -14,4 +14,5 @@ class RemoveCallbackFactory(CallbackData, prefix="remem"):
 
 class Gen(StatesGroup):
     room_name_to_create = State()
-    room_name_to_join= State()
+    room_name_to_join = State()
+    approval_delete = State()
