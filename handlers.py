@@ -76,7 +76,8 @@ async def create_room(msg: Message, state: FSMContext):
         return
     id = await db.create_room(name,msg.from_user.id)
     if not id:
-        await msg.answer("Имя не должно содержать _mem , _saint , :.,=+*-$#'\"\/\|<>&^%~`!}{)(][) ,цифры в начале , пробелы и не длинее 64 символов\nПридумайте другое название:",reply_markup=await keyboards.cancel_keyboard("None",False))
+        print(212121)
+        await msg.answer("Имя не должно содержать _mem , _saint, символы кроме  _ , цифры в начале , пробелы и не длинее 30 символов\nПридумайте другое название:",reply_markup=await keyboards.cancel_keyboard("None",False))
         return
     await state.clear()
     kb = await keyboards.room_admin_keyboard(f"{name}{id}")
@@ -127,9 +128,16 @@ async def get_my_admin_rooms(call: CallbackQuery, callback_data: CallbackFactory
 
 @router.callback_query(CallbackFactory.filter(F.action == "show_room"))
 async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
+    if isMemberOrAdmin == "ROOM NOT EXISTS":
+        await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        return
     if callback_data.asAdmin:
         await call.message.edit_text(f"Управление комнатой {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ",reply_markup =await keyboards.room_admin_keyboard(callback_data.room_iden))
     else:
+        if isMemberOrAdmin == "MEMBER NOT EXISTS" or (callback_data.asAdmin==False and isMemberOrAdmin =="IS ADMIN"):
+            await call.message.edit_text(f"Вы не участник комнаты  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+            return
         await call.message.edit_text(f"Комната {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
 
 @router.callback_query(CallbackFactory.filter(F.action == "delete_room"))
