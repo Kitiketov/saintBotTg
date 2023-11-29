@@ -133,5 +133,8 @@ async def check_room_and_member(user_id,room_iden):
     elif not _user:
         return "MEMBER NOT EXISTS"
     return True
+
+async def count_user_room(user_id):
+    return len(cur.execute(f"SELECT * FROM rooms_{user_id}").fetchall())
 if __name__ == "__main__":
     asyncio.run(start_db())
