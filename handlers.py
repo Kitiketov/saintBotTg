@@ -34,6 +34,7 @@ async def start_handler(msg: Message):
 
 @router.callback_query(CallbackFactory.filter(F.action == "create_room"))
 async def  start_create_room(call: CallbackQuery, callback_data: CallbackFactory, state : FSMContext):
+    await db.update_user(call.from_user)
     room_count = await db.count_user_room(call.from_user.id)
     if room_count>5:
         await call.message.answer("Превышено количество созданных вами комнат\n",reply_markup= await keyboards.cancel_keyboard("None",False))
@@ -50,6 +51,7 @@ async def start_join_room(call: CallbackQuery, callback_data: CallbackFactory, s
 
 @router.message(Gen.room_name_to_join)
 async def join_room(msg: Message, state: FSMContext):
+    await db.update_user(msg.from_user)
     name = msg.text
     if msg.text == "🚫Отмена":
         await state.clear()
@@ -69,6 +71,7 @@ async def join_room(msg: Message, state: FSMContext):
 
 @router.message(Gen.room_name_to_create)
 async def create_room(msg: Message, state: FSMContext):
+    await db.update_user(msg.from_user)
     name = msg.text
     if msg.text == "🚫Отмена":
         await state.clear()
@@ -76,20 +79,21 @@ async def create_room(msg: Message, state: FSMContext):
         return
     id = await db.create_room(name,msg.from_user.id)
     if not id:
-        print(212121)
         await msg.answer("Имя не должно содержать _mem , _saint, символы кроме  _ , цифры в начале , пробелы и не длинее 30 символов\nПридумайте другое название:",reply_markup=await keyboards.cancel_keyboard("None",False))
         return
     await state.clear()
     kb = await keyboards.room_admin_keyboard(f"{name}{id}")
-    await msg.answer(f"Комната:  {name}:{id} созданна \nЧтобы другие могли в неё войти скажите им её название c id\n<b>Админ автоматически не является участником</b>",reply_markup=kb)
+    await msg.answer(f"Комната:  {name}:{id} создана \nЧтобы другие могли в неё войти скажите им её название c id\n<b>Админ автоматически не является участником</b>",reply_markup=kb)
 
 @router.message(F.text =="◀️Вернуться в меню")
 @router.callback_query(CallbackFactory.filter(F.action == "back_to_menu"))
 async def menu(call: CallbackQuery, callback_data: CallbackFactory):
+    await db.update_user(call.from_user)
     await call.message.edit_text("Меню", reply_markup=keyboards.choice_kb)
 
 @router.callback_query(CallbackFactory.filter(F.action == "members_list"))
 async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "MEMBER NOT EXISTS" or (callback_data.asAdmin==False and isMemberOrAdmin =="IS ADMIN"):
         await call.message.edit_text(f"Вы не участник комнаты  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -106,28 +110,32 @@ async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
 
 @router.callback_query(CallbackFactory.filter(F.action == "cancel"))
 async def cancel(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     if callback_data.room_iden == "None":
         await state.clear()
     await call.message.delete()
 
 @router.callback_query(CallbackFactory.filter(F.action == "leave_room"))
 async def cancel(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     await db.leave_room(callback_data.room_iden,call.from_user.id)
     await call.message.edit_text("Вы покинули комнату", reply_markup=keyboards.choice_kb)
 
 @router.callback_query(CallbackFactory.filter(F.action == "list_of_rooms"))
 async def get_list_of_rooms(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.add_user(call.message.from_user)
+    await db.update_user(call.from_user)
     await call.message.edit_text("Выберите нужный вам вариант",reply_markup=keyboards.my_rooms_kb)
 
 @router.callback_query(CallbackFactory.filter(F.action == "my_rooms"))
 async def get_my_admin_rooms(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     rooms = await db.get_my_rooms(call.from_user.id, callback_data.asAdmin)
     kb = await keyboards.rooms_kb(rooms, callback_data.asAdmin)
     await call.message.edit_text("Выберите нужный вам вариант",reply_markup=kb)
 
 @router.callback_query(CallbackFactory.filter(F.action == "show_room"))
 async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -142,6 +150,7 @@ async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: 
 
 @router.callback_query(CallbackFactory.filter(F.action == "delete_room"))
 async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -151,6 +160,7 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
 
 @router.callback_query(CallbackFactory.filter(F.action == "confirm_delete"))
 async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -160,14 +170,14 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
 
 @router.callback_query(CallbackFactory.filter(F.action == "remove_member"))
 async def remove_member(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     members,*_ = await db.get_members_list(callback_data.room_iden)
     kb = await keyboards.member_keyboard(members,callback_data.room_iden)
     await call.message.answer("Выберите нужный вам вариант",reply_markup=kb)
 
 @router.callback_query(RemoveCallbackFactory.filter(F.action =="remove_member"))
 async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-
-
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(callback_data.user_id,callback_data.room_iden)
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
         await call.message.edit_text(f"Участник уже не в {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -181,6 +191,7 @@ async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, s
 
 @router.callback_query(CallbackFactory.filter(F.action =="start_event"))
 async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -208,6 +219,7 @@ async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state
 
 @router.callback_query(CallbackFactory.filter(F.action == "who_gives"))
 async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
@@ -221,12 +233,13 @@ async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: 
             await call.message.answer(f"Вы дарите {user_info}",reply_markup = await keyboards.ok_keyboard(callback_data.room_iden,asAdmin=False))
     else:
         await call.message.edit_text(f"Событие в комнате {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ещё не началось ",reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
-@router.message(F.text == "ID")
+@router.message(Command("ID"))
 async def get_id(msg: Message):
     await msg.answer(f"ID: user_id - {msg.from_user.id}\n      chat_id - {msg.chat.id}")
 
 @router.callback_query(CallbackFactory.filter(F.action == "create_invitation"))
 async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
         await call.message.edit_text(f"Вы не участник комнаты  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))

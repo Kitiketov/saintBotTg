@@ -37,6 +37,11 @@ async def add_user(user):
     if not  _user: 
         cur.execute(f"INSERT  INTO users (tg_id, first_name, last_name,username) VALUES ({user.id}, '{user.first_name}', '{user.last_name}', '{user.username}')")
         cur.execute(f"CREATE TABLE rooms_{user.id} (room_iden TEXT PRIMARY KEY, is_member BOOLEAN DEFAULT FALSE, is_admin BOOLEAN DEFAULT FALSE)")
+        db.commit()
+
+async def update_user(user):
+    await add_user(user)
+    cur.execute(f"UPDATE users SET first_name ='{user.first_name}', last_name = '{user.last_name}', username = '{user.username}' WHERE tg_id == {user.id}")
     db.commit()
 
 async def connect2room(raw_data,user_id):
@@ -70,7 +75,7 @@ async def get_members_list(room_iden):
 
     member_list = []
     for member_id in member_id_list:
-        if member_id[0]!=admin_id:
+        if member_id[0] != admin_id:
             member = cur.execute(f"SELECT * FROM users WHERE tg_id == {member_id[0]}").fetchone()
             member_list.append(member)
         else:
