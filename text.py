@@ -18,3 +18,12 @@ async def create_member_list(raw_list,admin,room_iden):
         member_list +=f"{i}. " + await create_user_info(member)
         i += 1
     return member_list
+async def create_wishes_info(wishes):
+    if wishes == '-':
+        return "У вас пока нет пожеланий, но вы можете их написать"
+    return f"Ваше желание:\n{wishes}\nВы можете отредактировать его"
+
+async def take_wishes_info(wishes):
+    if wishes == '-':
+        return "У получателя пока нет пожеланий"
+    return f"Желание получателя:\n{wishes}"

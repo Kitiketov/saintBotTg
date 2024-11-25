@@ -21,7 +21,7 @@ async def create_room(room_name,user_id):
             if not _room_iden:
                 break
         cur.execute(f"INSERT INTO rooms (room_iden,admin) VALUES ('{room_name}{room_id}', {user_id})")
-        cur.execute(f"CREATE TABLE {room_name}{room_id}_mem (user_id INTEGER PRIMARY KEY)")
+        cur.execute(f"CREATE TABLE {room_name}{room_id}_mem (user_id INTEGER PRIMARY KEY, wishes TEXT)")
         cur.execute(f"CREATE TABLE {room_name}{room_id}_saint (saint_user_id INTEGER PRIMARY KEY,reciver_user_id INTEGER)")
 
         _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
@@ -51,7 +51,7 @@ async def connect2room(raw_data,user_id):
     if _room:
         _user = cur.execute(f"SELECT * FROM {room_name}{room_id}_mem WHERE user_id == {user_id}").fetchone()
         if not _user:
-            cur.execute(f"INSERT INTO {room_name}{room_id}_mem (user_id) VALUES ({user_id})")
+            cur.execute(f"INSERT INTO {room_name}{room_id}_mem (user_id,wishes) VALUES ({user_id}, '-')")
 
             _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
             if not _room:
@@ -136,11 +136,40 @@ async def check_room_and_member(user_id,room_iden):
     _user = cur.execute(f"SELECT * FROM {room_iden}_mem WHERE user_id == {user_id}").fetchone()
     if not _user and _room[2] == user_id:
             return "IS ADMIN"
-    elif not _user:
+    if not _user:
         return "MEMBER NOT EXISTS"
     return True
 
 async def count_user_room(user_id):
     return len(cur.execute(f"SELECT * FROM rooms_{user_id}").fetchall())
+
+
+async def my_wishes(room_iden,user_id):
+    _room = cur.execute(f"SELECT * FROM rooms WHERE room_iden =='{room_iden}'").fetchone()
+    if not _room:
+        return "ROOM NOT EXISTS"
+    _user = cur.execute(f"SELECT * FROM {room_iden}_mem WHERE user_id == {user_id}").fetchone()
+    if not _user:
+        return "MEMBER NOT EXISTS"
+
+    return _user[1]
+    
+
+async def edit_wishes(wishes,user_id,room_iden):
+    _room = cur.execute(f"SELECT * FROM rooms WHERE room_iden =='{room_iden}'").fetchone()
+    if not _room:
+        return "ROOM NOT EXISTS"
+    _user = cur.execute(f"SELECT * FROM {room_iden}_mem WHERE user_id == {user_id}").fetchone()
+    if not _user:
+        return "MEMBER NOT EXISTS"
+    
+    cur.execute(f"UPDATE {room_iden}_mem SET wishes == '{wishes}' WHERE user_id == {user_id}")
+
+    db.commit()
+    return True
+
+
+
+
 if __name__ == "__main__":
-    asyncio.run(start_db())
+    asyncio.run(start_db())   

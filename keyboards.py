@@ -17,7 +17,7 @@ async def room_admin_keyboard(room_iden):
     room_kb = [
         [InlineKeyboardButton(text="🎲Начать событие", callback_data=states.CallbackFactory(action="start_event",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="📄Список участников", callback_data=states.CallbackFactory(action="members_list",room_iden=room_iden,asAdmin=True).pack())],
-        [InlineKeyboardButton(text="✏️Изменить настройки комнаты", callback_data=states.CallbackFactory(action="edit_room_settings",room_iden=room_iden,asAdmin=True).pack())],
+        [InlineKeyboardButton(text="✏️Изменить настройки комнаты(в разработке)", callback_data=states.CallbackFactory(action="edit_room_settings",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="❌Удалить комнату" , callback_data=states.CallbackFactory(action="delete_room",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="📛Удалить участника", callback_data=states.CallbackFactory(action="remove_member",room_iden=room_iden,asAdmin=True).pack())],
         [InlineKeyboardButton(text="✉️Создать приглашение", callback_data=states.CallbackFactory(action="create_invitation",room_iden=room_iden,asAdmin=True).pack())],
@@ -29,6 +29,7 @@ async def room_admin_keyboard(room_iden):
 async def room_member_keyboard(room_iden):
     room_join_kb = [
         [InlineKeyboardButton(text="🎁Кому я дарю",callback_data=states.CallbackFactory(action="who_gives",room_iden=room_iden,asAdmin=False).pack())],
+        [InlineKeyboardButton(text="✨Мои пожелание",callback_data=states.CallbackFactory(action="my_wishes",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="📄Список участников",callback_data=states.CallbackFactory(action="members_list",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="🚪Покинуть комнату",callback_data=states.CallbackFactory(action="leave_room",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="✉️Создать приглашение", callback_data=states.CallbackFactory(action="create_invitation",room_iden=room_iden,asAdmin=False).pack())],
@@ -83,6 +84,21 @@ async def confirm_keyboard(room_iden,asAdmin):
          InlineKeyboardButton(text="🚫Нет",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=asAdmin).pack())]
     ]
     return InlineKeyboardMarkup(inline_keyboard=confirm_kb)
+
+async def wishes_keyboard(room_iden,asAdmin):
+    confirm_kb = [
+        [InlineKeyboardButton(text="✅Окей",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=asAdmin).pack()),
+         InlineKeyboardButton(text="✏️Изменить желание",callback_data=states.CallbackFactory(action="edit_wishes",room_iden=room_iden,asAdmin=asAdmin).pack())],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=confirm_kb)
+
+
+async def wishes_keyboard2(room_iden,asAdmin):
+    cancel_kb = [
+        [InlineKeyboardButton(text="✅OK",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=asAdmin).pack()),
+         InlineKeyboardButton(text="👀Посмотреть желание",callback_data=states.CallbackFactory(action="see_wishes",room_iden=room_iden,asAdmin=asAdmin).pack())]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=cancel_kb)
 
 my_rooms_kb = InlineKeyboardMarkup(inline_keyboard=my_rooms_kb)
 choice_kb = InlineKeyboardMarkup(inline_keyboard=choice_kb)
