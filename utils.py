@@ -20,5 +20,11 @@ def randomize_members(members):
     return pairs
 
 if __name__ =="__main__":
-    members =[1,2,3,4]
-    print(randomize_members(members))
+    for i in range(1):
+        members =[1,2,3,4,5,6,7,8,9,0]
+        pp = randomize_members(members)
+        for p in pp:
+            if p==pp[p] or len(members)!=len(list(pp.values())):
+                print("error")
+                exit(0)
+    print('успешно')

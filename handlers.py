@@ -16,21 +16,28 @@ router = Router()
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     await db.add_user(msg.from_user)
-    if "join_to_room-" in msg.text and "end_invitation" in msg.text:
-        raw_iden = msg.text.split("join_to_room-")[1].replace("end_invitation","")
-        room_iden = base64.urlsafe_b64decode(raw_iden+"===").decode()
-        name = f"{room_iden[:-4]}:{room_iden[-4:]}"
-        room_status = await db.connect2room(name,msg.from_user.id)
-        if room_status == "room_error":
-            await msg.answer("Такой комнаты не существует",reply_markup=await  keyboards.cancel_keyboard("None",False))
-            return
-        elif room_status == "user_error":
-            await msg.answer("Вы уже находитесь в этой комнате",reply_markup=await keyboards.cancel_keyboard("None",False))
-            return
-        kb = await keyboards.room_member_keyboard(f"{''.join(name.split(':'))}")
-        await msg.answer(f"{msg.from_user.first_name} вы успешно присоединились к комнате: {name}",reply_markup=kb)
+    if not ("join_to_room-" in msg.text and "end_invitation" in msg.text):
+        await msg.answer("🎅Мы рады что вы выбрали нас.\n Что вы хотите:",reply_markup=keyboards.choice_kb)
         return
-    await msg.answer("🎅Мы рады что вы выбрали нас.\n Что вы хотите:",reply_markup=keyboards.choice_kb)
+    
+    raw_iden = msg.text.split("join_to_room-")[1].replace("end_invitation","")
+    room_iden = base64.urlsafe_b64decode(raw_iden+"===").decode()
+    name = f"{room_iden[:-4]}:{room_iden[-4:]}"
+    room_status = await db.connect2room(name,msg.from_user.id)
+
+    if room_status == "room_error":
+        await msg.answer("Такой комнаты не существует",reply_markup=await  keyboards.cancel_keyboard("None",False))
+        return
+    if room_status == "user_error":
+        await msg.answer("Вы уже находитесь в этой комнате",reply_markup=await keyboards.cancel_keyboard("None",False))
+        return
+    if room_status == "joined late":
+        await msg.answer("Игра уже начилась",reply_markup=await keyboards.cancel_keyboard("None",False))
+        return
+    
+    kb = await keyboards.room_member_keyboard(f"{''.join(name.split(':'))}")
+    await msg.answer(f"{msg.from_user.first_name} вы успешно присоединились к комнате: {name}",reply_markup=kb)
+    
 
 @router.callback_query(CallbackFactory.filter(F.action == "create_room"))
 async def  start_create_room(call: CallbackQuery, callback_data: CallbackFactory, state : FSMContext):
@@ -179,56 +186,65 @@ async def remove_member(call: CallbackQuery, callback_data: CallbackFactory, sta
 async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(callback_data.user_id,callback_data.room_iden)
+    room_name = f'{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}'
+
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
-        await call.message.edit_text(f"Участник уже не в {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Участник уже не в {room_name}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     elif isMemberOrAdmin == "ROOM NOT EXISTS":
-        await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует ",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Комнаты {room_name} не существует ",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     
     await db.leave_room(callback_data.room_iden,callback_data.user_id)
-    await call.message.edit_text(f"Участник удален из комнаты  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ",reply_markup = await keyboards.ok_keyboard(callback_data.room_iden,asAdmin=True))
+    await call.message.edit_text(f"Участник удален из комнаты  {room_name} ",reply_markup = await keyboards.ok_keyboard(callback_data.room_iden,asAdmin=True))
 
 @router.callback_query(CallbackFactory.filter(F.action =="start_event"))
 async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
+    room_name = f'{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}'
+
     if isMemberOrAdmin == "ROOM NOT EXISTS":
-        await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Комнаты {room_name} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     
     status = await db.isStarted(callback_data.room_iden)
     if status:
-        await call.message.edit_text(f"Событие уже начато  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ",reply_markup = await keyboards.room_admin_keyboard(callback_data.room_iden))
+        await call.message.edit_text(f"Событие уже начато  {room_name} ",reply_markup = await keyboards.room_admin_keyboard(callback_data.room_iden))
         return
 
     members,admin,isAdminMember = await db.get_members_list(callback_data.room_iden)
     if isAdminMember:
         members.append(admin)
+
     members = [member[0] for member in members]
     if len(members)<2:
-            await call.message.edit_text(f"Участников в  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} недостаточно для начала. Должно быть более 1",reply_markup = await keyboards.room_admin_keyboard(callback_data.room_iden))
-            return
+        await call.message.edit_text(f"Участников в  {room_name} недостаточно для начала. Должно быть более 1",reply_markup = await keyboards.room_admin_keyboard(callback_data.room_iden))
+        return
     
     await db.start_event(callback_data.room_iden)
     pairs = utils.randomize_members(members)
     await db.write_pairs(pairs,callback_data.room_iden)
-    await call.message.edit_text(f"Событие началось в  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ",reply_markup =await keyboards.room_admin_keyboard(callback_data.room_iden))
+    await call.message.edit_text(f"Событие началось в  {room_name} ",reply_markup =await keyboards.room_admin_keyboard(callback_data.room_iden))
     for user_id in members:
-        await call.bot.send_message(chat_id=user_id, text=f"Событие в комнате {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} началось\nПроверте кому вы дарите",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.bot.send_message(chat_id=user_id, text=f"Событие в комнате {room_name} началось\nПроверте кому вы дарите",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
 
 @router.callback_query(CallbackFactory.filter(F.action == "who_gives"))
 async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
+    room_name = f'{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}'
     if isMemberOrAdmin == "ROOM NOT EXISTS":
-        await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Комнаты {room_name} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     status = await db.isStarted(callback_data.room_iden)
     if not status:
-         await call.message.edit_text(f"Событие в комнате {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} ещё не началось ",reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
+         await call.message.edit_text(f"Событие в комнате {room_name} ещё не началось ",reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
          return
     member_id = await db.who_gives(callback_data.room_iden,call.from_user.id)
+    if member_id == 'JOINED LATE':
+        await call.message.edit_text(f"Событие в комнате {room_name} началось раньше вашего присоединения\nВы не были распределены",reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
+        return
     member = await db.get_user(member_id)
     if member:
         user_info = await text.create_user_info(member)
@@ -243,14 +259,15 @@ async def get_id(msg: Message):
 async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
+    room_name = f'{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}'
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
-        await call.message.edit_text(f"Вы не участник комнаты  {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Вы не участник комнаты  {room_name}",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     elif isMemberOrAdmin == "ROOM NOT EXISTS":
-        await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
+        await call.message.edit_text(f"Комнаты {room_name} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
     kb = await keyboards.join_to_room(callback_data.room_iden)
-    await call.message.answer(f"✉️Приглашение принять участвие в Тайном санта в комнате {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}\n<i>Если приглашение не сработало попробуйте присоединиться в ручном режиме</i>",reply_markup=kb)
+    await call.message.answer(f"✉️Приглашение принять участвие в Тайном санта в комнате {room_name}\n<i>Если приглашение не сработало попробуйте присоединиться в ручном режиме</i>",reply_markup=kb)
 
 
 @router.callback_query(CallbackFactory.filter(F.action == "my_wishes"))
@@ -262,7 +279,7 @@ async def my_wishes(call: CallbackQuery, callback_data: CallbackFactory, state: 
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
 
-    wishes = await db.my_wishes(callback_data.room_iden,call.from_user.id)
+    wishes = await db.get_wishes(callback_data.room_iden,call.from_user.id)
     wishes_info = await text.create_wishes_info(wishes)
 
     await call.message.answer(wishes_info,reply_markup = await keyboards.wishes_keyboard(callback_data.room_iden,asAdmin=False))
@@ -305,15 +322,16 @@ async def edit_wishes_room(msg: Message, state: FSMContext):
     await msg.answer(f"Вы изменили пожелание:\n{edit_wishes}",reply_markup = await keyboards.wishes_keyboard(room_iden,asAdmin=False))
 
 @router.callback_query(CallbackFactory.filter(F.action == "see_wishes"))
-async def my_wishes(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def see_wishes(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
 
     isMemberOrAdmin = await db.check_room_and_member(call.from_user.id,callback_data.room_iden)
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(f"Комнаты {callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]} не существует",reply_markup=await keyboards.ok_keyboard("None",asAdmin=False))
         return
+    
     member_id = await db.who_gives(callback_data.room_iden,call.from_user.id)
-    wishes = await db.my_wishes(callback_data.room_iden,member_id)
+    wishes = await db.get_wishes(callback_data.room_iden,member_id)
     wishes_info = await text.take_wishes_info(wishes)
 
     await call.message.answer(wishes_info,reply_markup = await keyboards.ok_keyboard("None",False))

@@ -48,20 +48,22 @@ async def connect2room(raw_data,user_id):
     raw_data+=":"
     room_name, room_id,*_ = raw_data.split(":")
     _room = cur.execute(f"SELECT * FROM rooms WHERE room_iden == '{room_name}{room_id}'").fetchone()
-    if _room:
-        _user = cur.execute(f"SELECT * FROM {room_name}{room_id}_mem WHERE user_id == {user_id}").fetchone()
-        if not _user:
-            cur.execute(f"INSERT INTO {room_name}{room_id}_mem (user_id,wishes) VALUES ({user_id}, '-')")
-
-            _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
-            if not _room:
-                cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name}{room_id}')")
-            cur.execute(f"UPDATE rooms_{user_id} SET is_member == TRUE WHERE room_iden == '{room_name}{room_id}'")
-
-            db.commit()
-            return True
+    if not _room:
+        return "room_error"
+    if _room[1]==True:
+        return "joined late"
+    _user = cur.execute(f"SELECT * FROM {room_name}{room_id}_mem WHERE user_id == {user_id}").fetchone()
+    if _user:
         return "user_error"
-    return "room_error"
+    cur.execute(f"INSERT INTO {room_name}{room_id}_mem (user_id,wishes) VALUES ({user_id}, '-')")
+
+    _room = cur.execute(f"SELECT * FROM rooms_{user_id} WHERE room_iden == '{room_name}{room_id}'").fetchone()
+    if not _room:
+        cur.execute(f"INSERT INTO rooms_{user_id} (room_iden) VALUES ('{room_name}{room_id}')")
+    cur.execute(f"UPDATE rooms_{user_id} SET is_member == TRUE WHERE room_iden == '{room_name}{room_id}'")
+
+    db.commit()
+    return True
 
 
 async def get_members_list(room_iden):
@@ -120,6 +122,8 @@ async def start_event(room_iden):
 
 async def who_gives(room_iden,user_id):
     pair = cur.execute(f"SELECT * FROM {room_iden}_saint WHERE saint_user_id == {user_id}").fetchone()
+    if not pair:
+        return 'JOINED LATE'
     return pair[1]
 
 async def isStarted(room_iden):
@@ -144,7 +148,7 @@ async def count_user_room(user_id):
     return len(cur.execute(f"SELECT * FROM rooms_{user_id}").fetchall())
 
 
-async def my_wishes(room_iden,user_id):
+async def get_wishes(room_iden,user_id):
     _room = cur.execute(f"SELECT * FROM rooms WHERE room_iden =='{room_iden}'").fetchone()
     if not _room:
         return "ROOM NOT EXISTS"
