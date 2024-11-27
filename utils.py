@@ -20,7 +20,7 @@ def randomize_members(members):
     return pairs
 
 if __name__ =="__main__":
-    for i in range(1):
+    for i in range(1000):
         members =[1,2,3,4,5,6,7,8,9,0]
         pp = randomize_members(members)
         for p in pp:
