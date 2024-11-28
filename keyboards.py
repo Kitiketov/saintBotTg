@@ -29,7 +29,7 @@ async def room_admin_keyboard(room_iden):
 async def room_member_keyboard(room_iden):
     room_join_kb = [
         [InlineKeyboardButton(text="🎁Кому я дарю",callback_data=states.CallbackFactory(action="who_gives",room_iden=room_iden,asAdmin=False).pack())],
-        [InlineKeyboardButton(text="✨Мои пожелание",callback_data=states.CallbackFactory(action="my_wishes",room_iden=room_iden,asAdmin=False).pack())],
+        [InlineKeyboardButton(text="✨Мои пожелания",callback_data=states.CallbackFactory(action="my_wishes",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="📄Список участников",callback_data=states.CallbackFactory(action="members_list",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="🚪Покинуть комнату",callback_data=states.CallbackFactory(action="leave_room",room_iden=room_iden,asAdmin=False).pack())],
         [InlineKeyboardButton(text="✉️Создать приглашение", callback_data=states.CallbackFactory(action="create_invitation",room_iden=room_iden,asAdmin=False).pack())],
@@ -94,11 +94,19 @@ async def wishes_keyboard(room_iden,asAdmin):
 
 
 async def wishes_keyboard2(room_iden,asAdmin):
-    cancel_kb = [
+    wishes_kb = [
         [InlineKeyboardButton(text="✅OK",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=asAdmin).pack()),
          InlineKeyboardButton(text="👀Посмотреть желание",callback_data=states.CallbackFactory(action="see_wishes",room_iden=room_iden,asAdmin=asAdmin).pack())]
     ]
-    return InlineKeyboardMarkup(inline_keyboard=cancel_kb)
+    return InlineKeyboardMarkup(inline_keyboard=wishes_kb)
+
+
+async def refresh_list_kb(room_iden,asAdmin):
+    refresh_list_kb = [
+        [InlineKeyboardButton(text="🔄Обновить",callback_data=states.CallbackFactory(action="refresh_list",room_iden=room_iden,asAdmin=False).pack())],
+        [InlineKeyboardButton(text="🚫Отмена",callback_data=states.CallbackFactory(action="cancel",room_iden=room_iden,asAdmin=False).pack())]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=refresh_list_kb)
 
 my_rooms_kb = InlineKeyboardMarkup(inline_keyboard=my_rooms_kb)
 choice_kb = InlineKeyboardMarkup(inline_keyboard=choice_kb)

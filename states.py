@@ -4,22 +4,20 @@ from aiogram.filters.callback_data import CallbackData
 
 class CallbackFactory(CallbackData, prefix="calldata"):
     action: str
-    room_iden : str = ''
-    asAdmin : bool
+    room_iden: str = ""
+    asAdmin: bool
+
 
 class RemoveCallbackFactory(CallbackData, prefix="remem"):
     action: str
-    room_iden : str = ''
-    user_id : int
+    room_iden: str = ""
+    user_id: int
 
-# class SetWishesCallbackFactory(CallbackData, prefix="set_wishes"):
-#     action: str
-#     room_iden : str = ''
-#     user_id : int
 
-class CancelCallbackFactory(CallbackData,prefix="canceldata"):
+class CancelCallbackFactory(CallbackData, prefix="canceldata"):
     action: str
-    clearStates : bool
+    clearStates: bool
+
 
 class Gen(StatesGroup):
     room_name_to_create = State()
