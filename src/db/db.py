@@ -1,10 +1,12 @@
 import sqlite3 as sq
 import asyncio
+from pathlib import Path
 
 import random
 
 
-db = sq.connect("src/db/database.db")
+DB_PATH = Path(__file__).resolve().parent / "database.db"
+db = sq.connect(DB_PATH)
 cur = db.cursor()
 
 async def start_db():
