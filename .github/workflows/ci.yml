@@ -40,6 +40,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -52,7 +55,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ${{ env.IMAGE }}
 
   deploy:
     needs: build_and_push
@@ -61,6 +64,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> $GITHUB_ENV
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -71,9 +77,9 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || '22' }}
           script: |
             docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull $IMAGE
             docker stop saintbot || true
             docker rm saintbot || true
             docker run -d --name saintbot --restart unless-stopped \
               -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
-              ghcr.io/${{ github.repository }}:latest
+              $IMAGE
