@@ -1,12 +1,15 @@
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+
 from src.handlers import (
     legacy_route,
     common,
     create_room,
     room_admin,
     wishes,
-invitation
+    invitation,
+    debug,
+    join_room
 )
 
 
@@ -21,6 +24,8 @@ async def run_bot(token: str) -> None:
         room_admin.router,
         create_room.router,
         invitation.router,
+        debug.router,
+        join_room.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)

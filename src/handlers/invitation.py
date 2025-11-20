@@ -9,10 +9,6 @@ from src.texts import text
 from src.states.states import Gen, CallbackFactory, RemoveCallbackFactory
 from src.db import db
 from src.utilities import utils
-import logging
-
-logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
-                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 async def get_room_name(room_iden):

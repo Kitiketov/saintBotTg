@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
@@ -7,9 +5,6 @@ from aiogram.types import Message, CallbackQuery
 from src.db import db
 from src.keyboards import keyboards
 from src.states.states import Gen, CallbackFactory
-
-logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
-                    format="%(asctime)s %(levelname)s %(message)s")
 
 router = Router(name=__name__)
 

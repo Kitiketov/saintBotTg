@@ -1,7 +1,7 @@
 import asyncio
 
-from src.app.bot import run_bot
 from src.config import settings
+from src.app.bot import run_bot
 
 
 async def main() -> None:

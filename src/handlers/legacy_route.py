@@ -1,18 +1,14 @@
+import base64
+
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
 
-import base64
-from src.keyboards import keyboards
-from src.texts import text
-from src.states.states import Gen, CallbackFactory, RemoveCallbackFactory
 from src.db import db
-from src.utilities import utils
-import logging
-
-logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
-                    format="%(asctime)s %(levelname)s %(message)s")
+from src.keyboards import keyboards
+from src.states.states import CallbackFactory
+from src.texts import text
 
 
 async def get_room_name(room_iden):
@@ -53,47 +49,6 @@ async def start_handler(msg: Message):
     await msg.answer(f"{msg.from_user.first_name} вы успешно присоединились к комнате: {name}", reply_markup=kb)
 
 
-
-
-@router.callback_query(CallbackFactory.filter(F.action == "join_room"))
-async def start_join_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.add_user(call.from_user)
-    await state.set_state(Gen.room_name_to_join)
-    await call.message.answer("Напишите название комнаты c её id (имякомнаты:id):",
-                              reply_markup=await  keyboards.cancel_keyboard("None", False))
-
-
-@router.message(Gen.room_name_to_join)
-async def join_room(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
-    name = msg.text
-
-    if msg.text == "🚫Отмена":
-        await state.clear()
-        await msg.answer("Меню", reply_markup=keyboards.choice_kb)
-        return
-
-    room_status = await db.connect2room(name, msg.from_user.id)
-    if room_status == "room_error":
-        await msg.answer("Такой комнаты не существует\nПопробуйте ещё раз:",
-                         reply_markup=await  keyboards.cancel_keyboard("None", False))
-        return
-
-    elif room_status == "user_error":
-        await msg.answer("Вы уже находитесь в этой комнате\n",
-                         reply_markup=await keyboards.cancel_keyboard("None", False))
-        await state.clear()
-        return
-
-    await state.clear()
-    kb = await keyboards.room_member_keyboard(f"{''.join(name.split(':'))}")
-    await msg.answer(f"{msg.from_user.first_name} вы успешно присоединились к комнате: {name}", reply_markup=kb)
-
-
-
-
-
-
 @router.callback_query(CallbackFactory.filter(F.action == "refresh_list"))
 @router.callback_query(CallbackFactory.filter(F.action == "members_list"))
 async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
@@ -120,8 +75,6 @@ async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
     ans = await text.create_member_list(member_list, admin, callback_data.room_iden)
     await call.message.answer(ans, reply_markup=await keyboards.refresh_list_kb(callback_data.room_iden,
                                                                                 callback_data.asAdmin))
-
-
 
 
 @router.callback_query(CallbackFactory.filter(F.action == "leave_room"))
@@ -171,8 +124,6 @@ async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: 
                                  reply_markup=await keyboards.room_member_keyboard(callback_data.room_iden))
 
 
-
-
 @router.callback_query(CallbackFactory.filter(F.action == "who_gives"))
 async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
     await db.update_user(call.from_user)
@@ -202,11 +153,3 @@ async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: 
         user_info = await text.create_user_info(member)
         await call.message.answer(f"Вы дарите {user_info}",
                                   reply_markup=await keyboards.wishes_keyboard2(callback_data.room_iden, asAdmin=False))
-
-
-@router.message(Command("ID"))
-async def get_id(msg: Message):
-    await msg.answer(f"ID: user_id - {msg.from_user.id}\n      chat_id - {msg.chat.id}")
-
-
-
