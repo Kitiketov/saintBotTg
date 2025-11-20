@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from src.handlers import (
@@ -14,7 +15,9 @@ from src.handlers import (
 
 
 async def run_bot(token: str) -> None:
-    bot = Bot(token)
+    bot = Bot(token,
+              default=DefaultBotProperties(parse_mode="HTML"),
+              )
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_routers(
