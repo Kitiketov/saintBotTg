@@ -4,7 +4,7 @@ import asyncio
 import random
 
 
-db = sq.connect("database.db")
+db = sq.connect("src/db/database.db")
 cur = db.cursor()
 
 async def start_db():
