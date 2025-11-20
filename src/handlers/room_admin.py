@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 import base64
 from src.db import db
-from src.keyboards import keyboards
+from src.keyboards import common_kb, room_admin_kb
 from src.states.states import CallbackFactory, RemoveCallbackFactory
 from src.texts import messages, text
 from src.texts.callback_actions import CallbackAction
@@ -28,11 +28,11 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(
             messages.room_not_exists(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
-    kb = await keyboards.confirm_keyboard(callback_data.room_iden, callback_data.asAdmin)
+    kb = await room_admin_kb.confirm_kb(callback_data.room_iden, callback_data.asAdmin)
     await call.message.answer(messages.room_leave_confirmation(room_name), reply_markup=kb)
 
 
@@ -45,12 +45,12 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(
             messages.room_not_exists(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
     await db.delete_room(callback_data.room_iden, call.from_user.id)
-    await call.message.edit_text(messages.room_deleted(room_name), reply_markup=keyboards.choice_kb)
+    await call.message.edit_text(messages.room_deleted(room_name), reply_markup=common_kb.choice_kb)
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER))
@@ -58,7 +58,7 @@ async def remove_member(call: CallbackQuery, callback_data: CallbackFactory, sta
     await db.update_user(call.from_user)
     members, *_ = await db.get_members_list(callback_data.room_iden)
 
-    kb = await keyboards.member_keyboard(members, callback_data.room_iden)
+    kb = await room_admin_kb.member_kb(members, callback_data.room_iden)
     await call.message.answer(messages.choose_option(), reply_markup=kb)
 
 
@@ -71,21 +71,21 @@ async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, s
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
         await call.message.edit_text(
             messages.member_already_removed(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(
             messages.room_not_exists(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
     await db.leave_room(callback_data.room_iden, callback_data.user_id)
     await call.message.edit_text(
         messages.member_removed(room_name),
-        reply_markup=await keyboards.ok_keyboard(callback_data.room_iden, asAdmin=True),
+        reply_markup=await common_kb.ok_kb(callback_data.room_iden, asAdmin=True),
     )
 
 
@@ -98,7 +98,7 @@ async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state
     if isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(
             messages.room_not_exists(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
@@ -106,7 +106,7 @@ async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state
     if status:
         await call.message.edit_text(
             messages.event_already_started(room_name),
-            reply_markup=await keyboards.room_admin_keyboard(callback_data.room_iden),
+            reply_markup=await room_admin_kb.room_admin_kb(callback_data.room_iden),
         )
         return
 
@@ -118,7 +118,7 @@ async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state
     if len(members) < 2:
         await call.message.edit_text(
             messages.event_not_enough_members(room_name),
-            reply_markup=await keyboards.room_admin_keyboard(callback_data.room_iden),
+            reply_markup=await room_admin_kb.room_admin_kb(callback_data.room_iden),
         )
         return
 
@@ -127,12 +127,12 @@ async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state
     await db.write_pairs(pairs, callback_data.room_iden)
     await call.message.edit_text(
         messages.event_started(room_name),
-        reply_markup=await keyboards.room_admin_keyboard(callback_data.room_iden),
+        reply_markup=await room_admin_kb.room_admin_kb(callback_data.room_iden),
     )
 
     for user_id in members:
         await call.bot.send_message(
             chat_id=user_id,
             text=messages.event_started_notify(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )

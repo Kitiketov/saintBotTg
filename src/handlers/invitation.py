@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from src.db import db
-from src.keyboards import keyboards
+from src.keyboards import common_kb, invitation_kb
 from src.states.states import CallbackFactory
 from src.texts import messages
 from src.texts.callback_actions import CallbackAction
@@ -25,18 +25,18 @@ async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory,
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
         await call.message.edit_text(
             messages.not_a_member(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
     elif isMemberOrAdmin == "ROOM NOT EXISTS":
         await call.message.edit_text(
             messages.room_not_exists(room_name),
-            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
 
-    kb = await keyboards.join_to_room(callback_data.room_iden)
+    kb = await invitation_kb.join_to_room_kb(callback_data.room_iden)
 
     await call.message.answer(messages.invitation_text(room_name), reply_markup=kb)
 

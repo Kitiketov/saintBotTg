@@ -26,7 +26,7 @@ async def start_db():
     db.commit()
 
 async def create_room(room_name,user_id):
-    disvalid= ["_saint","_mem","\\",".","/",",",":","'","\""," ","*","+","-","#","@","$","%","^","!","~","`","&","|","<",">","[","]","(",")","{","}"]
+    disvalid= ["_saint","_mem","\\",".","/",",",":",";","'","\""," ","*","+","-","#","@","$","%","^","!","~","`","&","|","<",">","[","]","(",")","{","}"]
     if all([a not in room_name for a in disvalid]) and room_name[0] not in "0123456789" and len(room_name)<=30:
         while True:
             room_id = f"{random.randint(1,9999):04}"

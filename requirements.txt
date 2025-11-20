@@ -1,4 +1,6 @@
 aiogram
+pytest
+pytest-asyncio
 python-dotenv
 pydantic-settings
 pydantic

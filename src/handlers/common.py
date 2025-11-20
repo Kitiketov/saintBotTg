@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 import base64
 from src.db import db
-from src.keyboards import keyboards
+from src.keyboards import common_kb
 from src.states.states import CallbackFactory
 from src.texts import messages
 from src.texts.callback_actions import CallbackAction
@@ -29,4 +29,4 @@ async def cancel(call: CallbackQuery, callback_data: CallbackFactory, state: FSM
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.BACK_TO_MENU))
 async def menu(call: CallbackQuery, callback_data: CallbackFactory):
     await db.update_user(call.from_user)
-    await call.message.edit_text(messages.menu(), reply_markup=keyboards.choice_kb)
+    await call.message.edit_text(messages.menu(), reply_markup=common_kb.choice_kb)
