@@ -70,13 +70,12 @@ jobs:
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          IMAGE: ${{ env.IMAGE }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || '22' }}
+          envs: IMAGE
           script: |
             if [ -z "$IMAGE" ]; then echo "IMAGE is empty"; exit 1; fi
             docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
