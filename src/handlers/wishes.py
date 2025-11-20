@@ -49,11 +49,26 @@ async def my_wishes(call: CallbackQuery, callback_data: CallbackFactory, state: 
         )
         return
 
+    if isMemberOrAdmin != True:
+        await call.message.edit_text(
+            messages.wish_not_member(),
+            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+        )
+        return
+
+    current_wish = await db.get_wishes(callback_data.room_iden, call.from_user.id)
+    if current_wish in ("ROOM NOT EXISTS", "MEMBER NOT EXISTS"):
+        await call.message.edit_text(
+            messages.wish_not_member(),
+            reply_markup=await keyboards.ok_keyboard("None", asAdmin=False),
+        )
+        return
+
     await state.set_data({'room_iden': callback_data.room_iden})
     await state.set_state(Gen.set_wishes)
 
     await call.message.answer(
-        messages.prompt_wish(),
+        messages.prompt_wish_with_current(current_wish),
         reply_markup=await keyboards.cancel_keyboard("None", asAdmin=False),
     )
 

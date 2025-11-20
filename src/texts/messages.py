@@ -89,6 +89,12 @@ def room_created(room_name: str, room_id: str) -> str:
 def prompt_wish() -> str:
     return "Напишите ваше пожелание"
 
+def prompt_wish_with_current(current: str) -> str:
+    return (
+        "Ваше текущее желание:\n"
+        f"<code>{current}</code>\n"
+        "Отправьте новое (можно нажать на текст выше, чтобы скопировать)."
+    )
 
 def wish_not_member() -> str:
     return "Вы не участник комнаты"
@@ -143,3 +149,4 @@ def room_not_exists_retry() -> str:
 
 def id_info(user_id: int, chat_id: int) -> str:
     return f"ID: user_id - {user_id}\n      chat_id - {chat_id}"
+
