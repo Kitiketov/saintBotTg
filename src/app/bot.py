@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from src.db import db
 from src.handlers import (
     legacy_route,
     common,
@@ -15,6 +16,7 @@ from src.handlers import (
 
 
 async def run_bot(token: str) -> None:
+    await db.start_db()
     bot = Bot(token,
               default=DefaultBotProperties(parse_mode="HTML"),
               )
