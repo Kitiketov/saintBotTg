@@ -1,2 +1,7 @@
-aiogram==3.2.0
-python-dotenv==1.0.1
+aiogram
+pytest
+pytest-asyncio
+python-dotenv
+pydantic-settings
+pydantic
+pydantic_core

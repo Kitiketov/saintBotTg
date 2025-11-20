@@ -1,3 +1,6 @@
 /__pycache__
 .env
 *.log
+*/database.db
+/database.db
+*.db
