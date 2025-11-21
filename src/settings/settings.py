@@ -4,6 +4,7 @@ from pydantic import AnyUrl
 
 class Settings(BaseSettings):
     bot_token: str = ""
+    chat_id: int = 0
 
 
     @property
