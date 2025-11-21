@@ -35,7 +35,7 @@ async def create_room(room_name,user_id):
             if not _room_iden:
                 break
         cur.execute("INSERT INTO rooms (room_iden,admin) VALUES (?, ?)", (room_iden, user_id))
-        cur.execute(f"CREATE TABLE {room_iden}_mem (user_id INTEGER PRIMARY KEY, wishes TEXT)")
+        cur.execute(f"CREATE TABLE {room_iden}_mem (user_id INTEGER PRIMARY KEY, wishes TEXT, photo_id INTEGER)")
         cur.execute(f"CREATE TABLE {room_iden}_saint (saint_user_id INTEGER PRIMARY KEY,reciver_user_id INTEGER)")
 
         cur.execute("INSERT OR IGNORE INTO user_rooms (tg_id, room_iden) VALUES (?, ?)", (user_id, room_iden))
@@ -192,18 +192,18 @@ async def count_user_room(user_id):
     return count[0] if count else 0
 
 
-async def get_wishes(room_iden,user_id):
+async def get_wishes_and_photo(room_iden,user_id):
     _room = cur.execute("SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)).fetchone()
     if not _room:
         return "ROOM NOT EXISTS"
     _user = cur.execute(f"SELECT * FROM {room_iden}_mem WHERE user_id = ?", (user_id,)).fetchone()
     if not _user:
         return "MEMBER NOT EXISTS"
-
-    return _user[1]
+    print(_user)
+    return _user
     
 
-async def edit_wishes(wishes,user_id,room_iden):
+async def edit_wishes(wishes,user_id,room_iden,photo_id = ""):
     _room = cur.execute("SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)).fetchone()
     if not _room:
         return "ROOM NOT EXISTS"
@@ -212,8 +212,8 @@ async def edit_wishes(wishes,user_id,room_iden):
         return "MEMBER NOT EXISTS"
     
     cur.execute(
-        f"UPDATE {room_iden}_mem SET wishes = ? WHERE user_id = ?",
-        (wishes, user_id),
+        f"UPDATE {room_iden}_mem SET wishes = ? , photo_id = ? WHERE user_id = ?",
+        (wishes, photo_id, user_id),
     )
 
     db.commit()

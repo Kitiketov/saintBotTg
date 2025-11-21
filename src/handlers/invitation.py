@@ -35,8 +35,8 @@ async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory,
             reply_markup=await common_kb.ok_kb("None", asAdmin=False),
         )
         return
-
-    kb = await invitation_kb.join_to_room_kb(callback_data.room_iden)
+    info = await call.bot.get_me()
+    kb = await invitation_kb.join_to_room_kb(callback_data.room_iden,info.username)
 
     await call.message.answer(messages.invitation_text(room_name), reply_markup=kb)
 
