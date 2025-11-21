@@ -98,6 +98,10 @@ async def edit_wishes_room(msg: Message, state: FSMContext):
         await msg.answer(messages.menu(), reply_markup=common_kb.choice_kb)
         return
 
+    if msg.media_group_id:
+        await msg.answer(messages.media_group_not_supported(), reply_markup=await common_kb.cancel_kb("None", False))
+        return
+
     edit_wishes = (
         wishes_raw
         .replace("\\", "/")

@@ -124,6 +124,10 @@ def event_already_started(room_name: str) -> str:
     return f"Событие уже начато  {room_name} "
 
 
+def media_group_not_supported() -> str:
+    return "Можно отправить только одно фото или текст без альбомов."
+
+
 def event_not_enough_members(room_name: str) -> str:
     return f"Участников в  {room_name} недостаточно для начала. Должно быть более 1"
 
@@ -149,4 +153,3 @@ def room_not_exists_retry() -> str:
 
 def id_info(user_id: int, chat_id: int) -> str:
     return f"ID: user_id - {user_id}\n      chat_id - {chat_id}"
-

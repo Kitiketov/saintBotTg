@@ -40,7 +40,7 @@ async def create_room(room_name, user_id):
         member_table_name = f"{room_iden}_mem"
         saint_table_name = f"{room_iden}_saint"
         cur.execute("INSERT INTO rooms (room_iden,admin) VALUES (?, ?)", (room_iden, user_id))
-        cur.execute(f"CREATE TABLE {member_table_name} (user_id INTEGER PRIMARY KEY, wishes TEXT, photo_id INTEGER)")
+        cur.execute(f"CREATE TABLE {member_table_name} (user_id INTEGER PRIMARY KEY, wishes TEXT, photo_id TEXT)")
         cur.execute(f"CREATE TABLE {saint_table_name} (saint_user_id INTEGER PRIMARY KEY,reciver_user_id INTEGER)")
 
         cur.execute("INSERT OR IGNORE INTO user_rooms (tg_id, room_iden) VALUES (?, ?)", (user_id, room_iden))
@@ -220,13 +220,13 @@ async def count_user_room(user_id):
 async def get_wishes_and_photo(room_iden, user_id):
     _room = cur.execute("SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)).fetchone()
     if not _room:
-        return "ROOM NOT EXISTS"
+        return "ROOM NOT EXISTS", None, None
     table_name = f"{room_iden}_mem"
     _user = cur.execute(f"SELECT * FROM {table_name} WHERE user_id = ?", (user_id,)).fetchone()
     if not _user:
-        return "MEMBER NOT EXISTS"
-    print(_user)
-    return _user
+        return "MEMBER NOT EXISTS", None, None
+    _, wishes, photo_id = _user
+    return True, wishes, photo_id
 
 
 async def edit_wishes(wishes, user_id, room_iden, photo_id=""):
@@ -237,21 +237,12 @@ async def edit_wishes(wishes, user_id, room_iden, photo_id=""):
     if not _room:
         return "ROOM NOT EXISTS"
 
-    _user = cur.execute(
-        "SELECT * FROM room_members WHERE room_iden = ? AND user_id = ?",
-        (room_iden, user_id),
-    ).fetchone()
+    table_name = f"{room_iden}_mem"
+    _user = cur.execute(f"SELECT * FROM {table_name} WHERE user_id = ?", (user_id,)).fetchone()
     if not _user:
         return "MEMBER NOT EXISTS"
 
-    cur.execute(
-        """
-        UPDATE room_members
-        SET wishes = ?, photo_id = ?
-        WHERE room_iden = ? AND user_id = ?
-        """,
-        (wishes, photo_id, room_iden, user_id),
-    )
+    cur.execute(f"UPDATE {table_name} SET wishes = ?, photo_id = ? WHERE user_id = ?", (wishes, photo_id, user_id))
 
     db.commit()
     return True
