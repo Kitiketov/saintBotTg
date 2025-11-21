@@ -30,7 +30,6 @@ async def get_id(msg: Message):
             f"Твой id: {forwarder_id}\n"
             f"ID канала/чата: {chat_id}"
         )
-        print(1)
         await msg.bot.send_message(chat_id=chat_id, text='Привет!',)
         return
 
