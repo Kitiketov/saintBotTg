@@ -26,6 +26,7 @@ jobs:
       - name: Run tests
         env:
           BOT_TOKEN: dummy-token
+          CHAT_ID: ${{ secrets.CHAT_ID || '0' }}
         run: |
           python -m pytest -q
 
