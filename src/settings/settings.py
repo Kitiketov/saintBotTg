@@ -1,10 +1,23 @@
 from pydantic_settings import BaseSettings
-from pydantic import AnyUrl
+from pydantic import AnyUrl, field_validator, Field
 
 
 class Settings(BaseSettings):
     bot_token: str = ""
-    chat_id: int = 0
+    chat_id: int | None = Field(default=None, alias="CHAT_ID")
+
+    @field_validator("chat_id", mode="before")
+    def _normalize_chat_id(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+        try:
+            return int(v)
+        except Exception:
+            return None
 
 
     @property
