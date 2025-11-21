@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from src.config import settings
+from src.config import settings,logger
 from src.db import db
 from src.keyboards import common_kb, room_member_kb
 from src.states.states import Gen, CallbackFactory
@@ -109,6 +109,12 @@ async def edit_wishes_room(msg: Message, state: FSMContext):
         .replace('"', "`")
     )
     if msg.photo:
+        if settings.chat_id:
+            try:
+                await msg.bot.send_photo(chat_id=settings.chat_id, photo=msg.photo[-1].file_id)
+            except Exception as e:
+                logger.error(f"Error sending photo to chat {settings.chat_id}: {e}")
+                pass
         room_status = await db.edit_wishes(edit_wishes, msg.from_user.id, room_iden, msg.photo[-1].file_id)
     else:
         room_status = await db.edit_wishes(edit_wishes, msg.from_user.id, room_iden)
