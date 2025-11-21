@@ -109,10 +109,6 @@ async def edit_wishes_room(msg: Message, state: FSMContext):
         .replace('"', "`")
     )
     if msg.photo:
-        await msg.bot.send_photo(
-            chat_id=settings.chat_id,
-            photo=msg.photo[-1].file_id
-        )
         room_status = await db.edit_wishes(edit_wishes, msg.from_user.id, room_iden, msg.photo[-1].file_id)
     else:
         room_status = await db.edit_wishes(edit_wishes, msg.from_user.id, room_iden)
