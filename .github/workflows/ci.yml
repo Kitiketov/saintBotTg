@@ -82,10 +82,11 @@ jobs:
             docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
             docker pull $IMAGE
             mkdir -p /opt/saintbot/db
+            touch /opt/saintbot/db/database.db
             docker stop saintbot || true
             docker rm saintbot || true
             docker run -d --name saintbot --restart unless-stopped \
-              -v /opt/saintbot/db:/app/src/db \
+              -v /opt/saintbot/db/database.db:/app/src/db/database.db \
               -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
               -e CHAT_ID=${{ secrets.CHAT_ID }} \
               $IMAGE
