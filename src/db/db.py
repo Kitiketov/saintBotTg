@@ -7,10 +7,21 @@ DB_PATH = Path(__file__).resolve().parent / "database.db"
 db = sq.connect(DB_PATH)
 cur = db.cursor()
 
+ROOM_DEFAULT_PRICE = "не установлен"
+ROOM_DEFAULT_EVENT_TIME = "не установлено"
+ROOM_DEFAULT_EXCHANGE_TYPE = "централизованый"
+
 
 async def start_db():
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS rooms(room_iden TEXT PRIMARY KEY,status BOOLEAN DEFAULT FALSE,admin INTEGER)"
+        "CREATE TABLE IF NOT EXISTS rooms("
+        "room_iden TEXT PRIMARY KEY,"
+        "status BOOLEAN DEFAULT FALSE,"
+        "admin INTEGER,"
+        "gift_price_range TEXT DEFAULT 'не установлен',"
+        "event_time TEXT DEFAULT 'не установлено',"
+        "exchange_type TEXT DEFAULT 'централизованый'"
+        ")"
     )
     cur.execute(
         "CREATE TABLE IF NOT EXISTS users(tg_id INTEGER PRIMARY KEY,first_name TEXT,last_name TEXT,username TEXT)"
@@ -26,6 +37,7 @@ async def start_db():
         )
         """
     )
+    await migrate_rooms_table()
     db.commit()
 
 
@@ -165,7 +177,7 @@ async def get_members_list(room_iden):
     admin_raw = cur.execute(
         "SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)
     ).fetchone()
-    *_, admin_id = admin_raw
+    admin_id = admin_raw[2]
     isAdminMember = False
 
     member_id_list = cur.execute(f"SELECT * FROM {room_iden}_mem ").fetchall()
@@ -260,10 +272,10 @@ async def who_gives(room_iden, user_id):
 
 
 async def isStarted(room_iden):
-    _, status, _ = cur.execute(
+    room_raw = cur.execute(
         "SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)
     ).fetchone()
-    return status
+    return room_raw[1]
 
 
 async def get_user(user_id):
@@ -285,6 +297,15 @@ async def check_room_and_member(user_id, room_iden):
     if not _user:
         return "MEMBER NOT EXISTS"
     return True
+
+
+async def get_room_admin(room_iden):
+    admin_raw = cur.execute(
+        "SELECT admin FROM rooms WHERE room_iden = ?", (room_iden,)
+    ).fetchone()
+    if not admin_raw:
+        return None
+    return admin_raw[0]
 
 
 async def count_user_room(user_id):
@@ -330,6 +351,71 @@ async def edit_wishes(wishes, user_id, room_iden, photo_id=""):
         f"UPDATE {table_name} SET wishes = ?, photo_id = ? WHERE user_id = ?",
         (wishes, photo_id, user_id),
     )
+
+    db.commit()
+    return True
+
+
+async def migrate_rooms_table():
+    columns = [
+        column[1] for column in cur.execute("PRAGMA table_info(rooms)").fetchall()
+    ]
+    migrations = [
+        (
+            "gift_price_range",
+            f"ALTER TABLE rooms ADD COLUMN gift_price_range TEXT DEFAULT '{ROOM_DEFAULT_PRICE}'",
+        ),
+        (
+            "event_time",
+            f"ALTER TABLE rooms ADD COLUMN event_time TEXT DEFAULT '{ROOM_DEFAULT_EVENT_TIME}'",
+        ),
+        (
+            "exchange_type",
+            f"ALTER TABLE rooms ADD COLUMN exchange_type TEXT DEFAULT '{ROOM_DEFAULT_EXCHANGE_TYPE}'",
+        ),
+    ]
+
+    for column, query in migrations:
+        if column not in columns:
+            cur.execute(query)
+
+    db.commit()
+
+
+async def get_room_settings(room_iden):
+    _room = cur.execute(
+        "SELECT gift_price_range, event_time, exchange_type FROM rooms WHERE room_iden = ?",
+        (room_iden,),
+    ).fetchone()
+    if not _room:
+        return "ROOM NOT EXISTS", None, None, None
+    price, event_time, exchange_type = _room
+    return True, price, event_time, exchange_type
+
+
+async def update_room_settings(room_iden, price=None, event_time=None, exchange_type=None):
+    _room = cur.execute(
+        "SELECT 1 FROM rooms WHERE room_iden = ?",
+        (room_iden,),
+    ).fetchone()
+    if not _room:
+        return "ROOM NOT EXISTS"
+
+    if price is not None:
+        cur.execute(
+            "UPDATE rooms SET gift_price_range = ? WHERE room_iden = ?",
+            (price, room_iden),
+        )
+    if event_time is not None:
+        cur.execute(
+            "UPDATE rooms SET event_time = ? WHERE room_iden = ?",
+            (event_time, room_iden),
+        )
+    if exchange_type is not None:
+        cur.execute(
+            "UPDATE rooms SET exchange_type = ? WHERE room_iden = ?",
+            (exchange_type, room_iden),
+        )
 
     db.commit()
     return True

@@ -29,3 +29,5 @@ class Gen(StatesGroup):
     room_name_to_join = State()
     approval_delete = State()
     set_wishes = State()
+    set_room_price = State()
+    set_room_time = State()

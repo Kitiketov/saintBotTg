@@ -12,6 +12,7 @@ from src.handlers import (
     invitation,
     debug,
     join_room,
+    settings as room_settings,
 )
 
 
@@ -32,6 +33,7 @@ async def run_bot(token: str) -> None:
         invitation.router,
         debug.router,
         join_room.router,
+        room_settings.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)

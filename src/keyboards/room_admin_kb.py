@@ -27,7 +27,7 @@ async def room_admin_kb(room_iden):
         ],
         [
             InlineKeyboardButton(
-                text="✏️Изменить настройки комнаты(в разработке)",
+                text="✏️Изменить настройки комнаты",
                 callback_data=states.CallbackFactory(
                     action=CallbackAction.EDIT_ROOM_SETTINGS,
                     room_iden=room_iden,

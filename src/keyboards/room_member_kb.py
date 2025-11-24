@@ -34,6 +34,16 @@ async def room_member_kb(room_iden):
         ],
         [
             InlineKeyboardButton(
+                text="⚙️Настройки комнаты",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.SHOW_ROOM_SETTINGS,
+                    room_iden=room_iden,
+                    asAdmin=False,
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="🚪Покинуть комнату",
                 callback_data=states.CallbackFactory(
                     action=CallbackAction.LEAVE_ROOM, room_iden=room_iden, asAdmin=False
