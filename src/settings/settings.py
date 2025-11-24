@@ -19,7 +19,6 @@ class Settings(BaseSettings):
         except Exception:
             return None
 
-
     @property
     def api_base(self) -> AnyUrl:
         """Возвращает адрес API в зависимости от окружения."""

@@ -17,7 +17,9 @@ router = Router(name=__name__)
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.JOIN_ROOM))
-async def start_join_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def start_join_room(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.add_user(call.from_user)
     await state.set_state(Gen.room_name_to_join)
     await call.message.answer(
@@ -38,11 +40,17 @@ async def join_room(msg: Message, state: FSMContext):
 
     room_status = await db.connect2room(name, msg.from_user.id)
     if room_status == "room_error":
-        await msg.answer(messages.room_not_exists_retry(), reply_markup=await common_kb.cancel_kb("None", False))
+        await msg.answer(
+            messages.room_not_exists_retry(),
+            reply_markup=await common_kb.cancel_kb("None", False),
+        )
         return
 
     elif room_status == "user_error":
-        await msg.answer(messages.user_already_in_room(), reply_markup=await common_kb.cancel_kb("None", False))
+        await msg.answer(
+            messages.user_already_in_room(),
+            reply_markup=await common_kb.cancel_kb("None", False),
+        )
         await state.clear()
         return
 

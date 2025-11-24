@@ -9,7 +9,13 @@ from src.utilities import utils
 
 
 class DummyUser:
-    def __init__(self, user_id: int, first_name: str = "Test", last_name: str = "User", username: str = "tester"):
+    def __init__(
+        self,
+        user_id: int,
+        first_name: str = "Test",
+        last_name: str = "User",
+        username: str = "tester",
+    ):
         self.id = user_id
         self.first_name = first_name
         self.last_name = last_name
@@ -82,7 +88,10 @@ def test_get_my_rooms_returns_admin_and_member_lists(setup_db, stub_random):
     admin_rooms = run(db.get_my_rooms(admin.id, asAdmin=True))
     member_rooms = run(db.get_my_rooms(member.id, asAdmin=False))
 
-    assert set(admin_rooms) == {_room_name("alpha", room_a_id), _room_name("beta", room_b_id)}
+    assert set(admin_rooms) == {
+        _room_name("alpha", room_a_id),
+        _room_name("beta", room_b_id),
+    }
     assert member_rooms == [_room_name("alpha", room_a_id)]
 
 
@@ -143,8 +152,18 @@ def test_delete_room_removes_all_traces(setup_db, stub_random):
 
     run(db.delete_room(room_iden, admin.id))
 
-    assert db.cur.execute("SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)).fetchone() is None
-    assert db.cur.execute("SELECT * FROM user_rooms WHERE room_iden = ?", (room_iden,)).fetchone() is None
+    assert (
+        db.cur.execute(
+            "SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)
+        ).fetchone()
+        is None
+    )
+    assert (
+        db.cur.execute(
+            "SELECT * FROM user_rooms WHERE room_iden = ?", (room_iden,)
+        ).fetchone()
+        is None
+    )
 
     tables = db.cur.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE ?",
@@ -166,16 +185,27 @@ def test_leave_room_removes_member_record(setup_db, stub_random):
 
     run(db.leave_room(room_iden, member.id))
 
-    assert db.cur.execute(f"SELECT * FROM {room_iden}_mem WHERE user_id = ?", (member.id,)).fetchone() is None
-    assert db.cur.execute(
-        "SELECT * FROM user_rooms WHERE tg_id = ? AND room_iden = ?",
-        (member.id, room_iden),
-    ).fetchone() is None
+    assert (
+        db.cur.execute(
+            f"SELECT * FROM {room_iden}_mem WHERE user_id = ?", (member.id,)
+        ).fetchone()
+        is None
+    )
+    assert (
+        db.cur.execute(
+            "SELECT * FROM user_rooms WHERE tg_id = ? AND room_iden = ?",
+            (member.id, room_iden),
+        ).fetchone()
+        is None
+    )
     # Admin entry must remain untouched.
-    assert db.cur.execute(
-        "SELECT * FROM user_rooms WHERE tg_id = ? AND room_iden = ?",
-        (admin.id, room_iden),
-    ).fetchone() is not None
+    assert (
+        db.cur.execute(
+            "SELECT * FROM user_rooms WHERE tg_id = ? AND room_iden = ?",
+            (admin.id, room_iden),
+        ).fetchone()
+        is not None
+    )
 
 
 def test_randomize_members_assigns_unique_pairs():

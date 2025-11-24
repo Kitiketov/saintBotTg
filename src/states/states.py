@@ -18,9 +18,11 @@ class CancelCallbackFactory(CallbackData, prefix="canceldata"):
     action: str
     clearStates: bool
 
+
 class EditCallbackFactory(CallbackData, prefix="editdata"):
     action: str
     editMessage: str
+
 
 class Gen(StatesGroup):
     room_name_to_create = State()

@@ -26,7 +26,9 @@ async def room_member_kb(room_iden):
             InlineKeyboardButton(
                 text="📄Список участников",
                 callback_data=states.CallbackFactory(
-                    action=CallbackAction.MEMBERS_LIST, room_iden=room_iden, asAdmin=False
+                    action=CallbackAction.MEMBERS_LIST,
+                    room_iden=room_iden,
+                    asAdmin=False,
                 ).pack(),
             )
         ],
@@ -42,7 +44,9 @@ async def room_member_kb(room_iden):
             InlineKeyboardButton(
                 text="✉️Создать приглашение",
                 callback_data=states.CallbackFactory(
-                    action=CallbackAction.CREATE_INVITATION, room_iden=room_iden, asAdmin=False
+                    action=CallbackAction.CREATE_INVITATION,
+                    room_iden=room_iden,
+                    asAdmin=False,
                 ).pack(),
             )
         ],
@@ -50,7 +54,9 @@ async def room_member_kb(room_iden):
             InlineKeyboardButton(
                 text="◀️Вернуться в меню",
                 callback_data=states.CallbackFactory(
-                    action=CallbackAction.BACK_TO_MENU, room_iden=room_iden, asAdmin=False
+                    action=CallbackAction.BACK_TO_MENU,
+                    room_iden=room_iden,
+                    asAdmin=False,
                 ).pack(),
             )
         ],
@@ -78,7 +84,9 @@ async def wishes_kb(room_iden, asAdmin):
             InlineKeyboardButton(
                 text="✏️Изменить желание",
                 callback_data=states.CallbackFactory(
-                    action=CallbackAction.EDIT_WISHES, room_iden=room_iden, asAdmin=asAdmin
+                    action=CallbackAction.EDIT_WISHES,
+                    room_iden=room_iden,
+                    asAdmin=asAdmin,
                 ).pack(),
             ),
         ],
@@ -98,7 +106,9 @@ async def wishes_kb2(room_iden, asAdmin):
             InlineKeyboardButton(
                 text="👀Посмотреть желание",
                 callback_data=states.CallbackFactory(
-                    action=CallbackAction.SEE_WISHES, room_iden=room_iden, asAdmin=asAdmin
+                    action=CallbackAction.SEE_WISHES,
+                    room_iden=room_iden,
+                    asAdmin=asAdmin,
                 ).pack(),
             ),
         ]

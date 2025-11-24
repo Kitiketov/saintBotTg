@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from src.db import db
+from src.handlers.common import set_reaction
 from src.keyboards import common_kb, room_admin_kb
 from src.states.states import Gen, CallbackFactory
 from src.texts import messages
@@ -12,7 +13,9 @@ router = Router(name=__name__)
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.CREATE_ROOM))
-async def start_create_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def start_create_room(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
     room_count = await db.count_user_room(call.from_user.id)
 
@@ -25,7 +28,10 @@ async def start_create_room(call: CallbackQuery, callback_data: CallbackFactory,
 
     await db.add_user(call.from_user)
     await state.set_state(Gen.room_name_to_create)
-    await call.message.answer(messages.prompt_create_room_name(), reply_markup=await common_kb.cancel_kb("None", False))
+    await call.message.answer(
+        messages.prompt_create_room_name(),
+        reply_markup=await common_kb.cancel_kb("None", False),
+    )
 
 
 @router.message(Gen.room_name_to_create)
@@ -48,6 +54,7 @@ async def create_room(msg: Message, state: FSMContext):
 
     await state.clear()
     kb = await room_admin_kb.room_admin_kb(f"{name}{id}")
+    await set_reaction(msg)
     await msg.answer(
         messages.room_created(name, id),
         reply_markup=kb,

@@ -11,15 +11,16 @@ from src.handlers import (
     wishes,
     invitation,
     debug,
-    join_room
+    join_room,
 )
 
 
 async def run_bot(token: str) -> None:
     await db.start_db()
-    bot = Bot(token,
-              default=DefaultBotProperties(parse_mode="HTML"),
-              )
+    bot = Bot(
+        token,
+        default=DefaultBotProperties(parse_mode="HTML"),
+    )
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_routers(

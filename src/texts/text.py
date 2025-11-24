@@ -2,10 +2,11 @@ import asyncio
 
 
 async def create_user_info(user):
+    print(user)
     text = f"{user[1]} "
-    if user[2] != "None":
+    if user[2] is not None:
         text += f"{user[2]} "
-    if user[3] != "None":
+    if user[3] is not None:
         text += f"@{user[3]}\n"
     else:
         text += f"<a href='tg://user?id={user[0]}'>{user[1]}</a>\n"

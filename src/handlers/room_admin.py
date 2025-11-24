@@ -11,6 +11,7 @@ from src.texts import messages, text
 from src.texts.callback_actions import CallbackAction
 from src.utilities import utils
 
+
 async def get_room_name(room_iden):
     return f"{room_iden[:-4]}:{room_iden[-4:]}"
 
@@ -18,11 +19,14 @@ async def get_room_name(room_iden):
 router = Router(name=__name__)
 
 
-
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.DELETE_ROOM))
-async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def delete_room(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
@@ -33,13 +37,21 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
         return
 
     kb = await room_admin_kb.confirm_kb(callback_data.room_iden, callback_data.asAdmin)
-    await call.message.answer(messages.room_leave_confirmation(room_name), reply_markup=kb)
+    await call.message.answer(
+        messages.room_leave_confirmation(room_name), reply_markup=kb
+    )
 
 
-@router.callback_query(CallbackFactory.filter(F.action == CallbackAction.CONFIRM_DELETE))
-async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+@router.callback_query(
+    CallbackFactory.filter(F.action == CallbackAction.CONFIRM_DELETE)
+)
+async def delete_room(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
@@ -50,11 +62,15 @@ async def delete_room(call: CallbackQuery, callback_data: CallbackFactory, state
         return
 
     await db.delete_room(callback_data.room_iden, call.from_user.id)
-    await call.message.edit_text(messages.room_deleted(room_name), reply_markup=common_kb.choice_kb)
+    await call.message.edit_text(
+        messages.room_deleted(room_name), reply_markup=common_kb.choice_kb
+    )
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER))
-async def remove_member(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def remove_member(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
     members, *_ = await db.get_members_list(callback_data.room_iden)
 
@@ -62,10 +78,16 @@ async def remove_member(call: CallbackQuery, callback_data: CallbackFactory, sta
     await call.message.answer(messages.choose_option(), reply_markup=kb)
 
 
-@router.callback_query(RemoveCallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER))
-async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+@router.callback_query(
+    RemoveCallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER)
+)
+async def removing_member(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(callback_data.user_id, callback_data.room_iden)
+    isMemberOrAdmin = await db.check_room_and_member(
+        callback_data.user_id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
@@ -90,9 +112,13 @@ async def removing_member(call: CallbackQuery, callback_data: CallbackFactory, s
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.START_EVENT))
-async def start_event(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
+async def start_event(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
