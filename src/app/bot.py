@@ -3,6 +3,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from src.db import db
+from src.middlewares import UpdateUserMiddleware
 from src.handlers import (
     legacy_route,
     common,
@@ -23,6 +24,8 @@ async def run_bot(token: str) -> None:
         default=DefaultBotProperties(parse_mode="HTML"),
     )
     dp = Dispatcher(storage=MemoryStorage())
+    dp.message.middleware(UpdateUserMiddleware())
+    dp.callback_query.middleware(UpdateUserMiddleware())
 
     dp.include_routers(
         legacy_route.router,

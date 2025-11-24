@@ -2,7 +2,6 @@ import asyncio
 
 
 async def create_user_info(user):
-    print(user)
     text = f"{user[1]} "
     if user[2] is not None:
         text += f"{user[2]} "

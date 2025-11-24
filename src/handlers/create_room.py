@@ -16,7 +16,6 @@ router = Router(name=__name__)
 async def start_create_room(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     room_count = await db.count_user_room(call.from_user.id)
 
     if room_count > 5:
@@ -36,7 +35,6 @@ async def start_create_room(
 
 @router.message(Gen.room_name_to_create)
 async def create_room(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
     name = msg.text
 
     if msg.text == "🚫Отмена":

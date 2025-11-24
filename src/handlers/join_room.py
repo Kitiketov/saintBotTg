@@ -30,7 +30,6 @@ async def start_join_room(
 
 @router.message(Gen.room_name_to_join)
 async def join_room(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
     name = msg.text
 
     if msg.text == "🚫Отмена":

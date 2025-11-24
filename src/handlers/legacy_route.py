@@ -64,8 +64,6 @@ async def start_handler(msg: Message):
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REFRESH_LIST))
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.MEMBERS_LIST))
 async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
-    await db.update_user(call.from_user)
-    print(call.from_user.id, callback_data.room_iden)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )
@@ -106,7 +104,6 @@ async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
 async def cancel(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     await db.leave_room(callback_data.room_iden, call.from_user.id)
     await call.message.edit_text(messages.left_room(), reply_markup=common_kb.choice_kb)
 
@@ -115,7 +112,6 @@ async def cancel(
 async def get_list_of_rooms(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     await call.message.edit_text(
         messages.choose_option(), reply_markup=rooms_kb.my_rooms_kb
     )
@@ -125,7 +121,6 @@ async def get_list_of_rooms(
 async def get_my_admin_rooms(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     rooms = await db.get_my_rooms(call.from_user.id, callback_data.asAdmin)
 
     kb = await rooms_kb.rooms_kb(rooms, callback_data.asAdmin)
@@ -136,7 +131,6 @@ async def get_my_admin_rooms(
 async def show_room(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )
@@ -175,7 +169,6 @@ async def show_room(
 async def who_gives(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )

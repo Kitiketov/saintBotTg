@@ -36,7 +36,6 @@ router = Router(name=__name__)
 async def cancel(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     if callback_data.room_iden == "None":
         await state.clear()
     await call.message.delete()
@@ -45,5 +44,4 @@ async def cancel(
 @router.message(F.text == "◀️Вернуться в меню")
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.BACK_TO_MENU))
 async def menu(call: CallbackQuery, callback_data: CallbackFactory):
-    await db.update_user(call.from_user)
     await call.message.edit_text(messages.menu(), reply_markup=common_kb.choice_kb)

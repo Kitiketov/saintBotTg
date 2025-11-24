@@ -22,7 +22,6 @@ router = Router(name=__name__)
 async def create_invitation(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )

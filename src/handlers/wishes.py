@@ -21,7 +21,6 @@ router = Router(name=__name__)
 async def my_wishes(
         call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )
@@ -51,7 +50,6 @@ async def my_wishes(
 async def my_wishes(
         call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )
@@ -99,7 +97,6 @@ async def my_wishes(
 
 @router.message(Gen.set_wishes)
 async def edit_wishes_room(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
     wishes_raw = msg.text or msg.caption or ""
 
     data = await state.get_data()
@@ -163,7 +160,6 @@ async def edit_wishes_room(msg: Message, state: FSMContext):
 async def see_wishes(
         call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )

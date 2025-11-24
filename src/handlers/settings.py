@@ -35,7 +35,6 @@ async def check_room_access(user_id, room_iden):
 async def show_room_settings(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -72,7 +71,6 @@ async def show_room_settings(
 async def show_room_settings_member(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     status = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
     )
@@ -110,7 +108,6 @@ async def show_room_settings_member(
 async def open_settings_edit(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -145,7 +142,6 @@ async def open_settings_edit(
 async def edit_room_price(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -178,7 +174,6 @@ async def edit_room_price(
 async def edit_room_time(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -211,7 +206,6 @@ async def edit_room_time(
 async def edit_room_type(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -249,7 +243,6 @@ async def edit_room_type(
 async def set_room_type(
     call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
-    await db.update_user(call.from_user)
     access, room_name = await check_room_access(
         call.from_user.id, callback_data.room_iden
     )
@@ -297,7 +290,6 @@ async def set_room_type(
 
 @router.message(Gen.set_room_price)
 async def set_room_price(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
     data = await state.get_data()
     room_iden = data.get("room_iden")
 
@@ -358,7 +350,6 @@ async def set_room_price(msg: Message, state: FSMContext):
 
 @router.message(Gen.set_room_time)
 async def set_room_time(msg: Message, state: FSMContext):
-    await db.update_user(msg.from_user)
     data = await state.get_data()
     room_iden = data.get("room_iden")
 
