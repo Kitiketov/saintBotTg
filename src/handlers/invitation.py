@@ -16,10 +16,15 @@ async def get_room_name(room_iden):
 router = Router(name=__name__)
 
 
-@router.callback_query(CallbackFactory.filter(F.action == CallbackAction.CREATE_INVITATION))
-async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+@router.callback_query(
+    CallbackFactory.filter(F.action == CallbackAction.CREATE_INVITATION)
+)
+async def create_invitation(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "MEMBER NOT EXISTS":
@@ -36,7 +41,6 @@ async def create_invitation(call: CallbackQuery, callback_data: CallbackFactory,
         )
         return
     info = await call.bot.get_me()
-    kb = await invitation_kb.join_to_room_kb(callback_data.room_iden,info.username)
+    kb = await invitation_kb.join_to_room_kb(callback_data.room_iden, info.username)
 
     await call.message.answer(messages.invitation_text(room_name), reply_markup=kb)
-

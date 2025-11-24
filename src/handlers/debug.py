@@ -26,11 +26,11 @@ async def get_id(msg: Message):
 
     if msg.forward_from_chat:
         chat_id = msg.forward_from_chat.id
-        await msg.answer(
-            f"Твой id: {forwarder_id}\n"
-            f"ID канала/чата: {chat_id}"
+        await msg.answer(f"Твой id: {forwarder_id}\n" f"ID канала/чата: {chat_id}")
+        await msg.bot.send_message(
+            chat_id=chat_id,
+            text="Привет!",
         )
-        await msg.bot.send_message(chat_id=chat_id, text='Привет!',)
         return
 
     await msg.answer(

@@ -35,7 +35,10 @@ async def start_handler(msg: Message):
     room_status = await db.connect2room(name, msg.from_user.id)
 
     if room_status == "room_error":
-        await msg.answer(messages.room_not_exists(), reply_markup=await common_kb.cancel_kb("None", False))
+        await msg.answer(
+            messages.room_not_exists(),
+            reply_markup=await common_kb.cancel_kb("None", False),
+        )
         return
 
     if room_status == "user_error":
@@ -47,22 +50,26 @@ async def start_handler(msg: Message):
 
     if room_status == "joined late":
         await msg.answer(
-            messages.game_already_started(), reply_markup=await common_kb.cancel_kb("None", False)
+            messages.game_already_started(),
+            reply_markup=await common_kb.cancel_kb("None", False),
         )
         return
 
     kb = await room_member_kb.room_member_kb(f"{''.join(name.split(':'))}")
-    await msg.answer(messages.join_success(msg.from_user.first_name, name), reply_markup=kb)
+    await msg.answer(
+        messages.join_success(msg.from_user.first_name, name), reply_markup=kb
+    )
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REFRESH_LIST))
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.MEMBERS_LIST))
 async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
-    await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
-    if isMemberOrAdmin == "MEMBER NOT EXISTS" or (callback_data.asAdmin == False and isMemberOrAdmin == "IS ADMIN"):
+    if isMemberOrAdmin == "MEMBER NOT EXISTS":
         await call.message.edit_text(
             messages.not_a_member(room_name),
             reply_markup=await common_kb.ok_kb("None", asAdmin=False),
@@ -79,31 +86,41 @@ async def get_member_list(call: CallbackQuery, callback_data: CallbackFactory):
     if callback_data.action == CallbackAction.REFRESH_LIST:
         await call.bot.delete_message(call.from_user.id, call.message.message_id)
 
-    member_list, admin, isAdminMember = await db.get_members_list(callback_data.room_iden)
+    member_list, admin, isAdminMember = await db.get_members_list(
+        callback_data.room_iden
+    )
     if isAdminMember:
         member_list.append(admin)
     ans = await text.create_member_list(member_list, admin, callback_data.room_iden)
     await call.message.answer(
-        ans, reply_markup=await room_admin_kb.refresh_list_kb(callback_data.room_iden, callback_data.asAdmin)
+        ans,
+        reply_markup=await room_admin_kb.refresh_list_kb(
+            callback_data.room_iden, callback_data.asAdmin
+        ),
     )
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.LEAVE_ROOM))
-async def cancel(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
+async def cancel(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     await db.leave_room(callback_data.room_iden, call.from_user.id)
     await call.message.edit_text(messages.left_room(), reply_markup=common_kb.choice_kb)
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.LIST_OF_ROOMS))
-async def get_list_of_rooms(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
-    await call.message.edit_text(messages.choose_option(), reply_markup=rooms_kb.my_rooms_kb)
+async def get_list_of_rooms(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
+    await call.message.edit_text(
+        messages.choose_option(), reply_markup=rooms_kb.my_rooms_kb
+    )
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.MY_ROOMS))
-async def get_my_admin_rooms(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
+async def get_my_admin_rooms(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
     rooms = await db.get_my_rooms(call.from_user.id, callback_data.asAdmin)
 
     kb = await rooms_kb.rooms_kb(rooms, callback_data.asAdmin)
@@ -111,9 +128,12 @@ async def get_my_admin_rooms(call: CallbackQuery, callback_data: CallbackFactory
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.SHOW_ROOM))
-async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
+async def show_room(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
     room_name = await get_room_name(callback_data.room_iden)
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
@@ -130,7 +150,9 @@ async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: 
         )
         return
 
-    if isMemberOrAdmin == "MEMBER NOT EXISTS" or (callback_data.asAdmin == False and isMemberOrAdmin == "IS ADMIN"):
+    if isMemberOrAdmin == "MEMBER NOT EXISTS" or (
+        callback_data.asAdmin == False and isMemberOrAdmin == "IS ADMIN"
+    ):
         await call.message.edit_text(
             messages.not_a_member(room_name),
             reply_markup=await common_kb.ok_kb("None", asAdmin=False),
@@ -144,10 +166,13 @@ async def show_room(call: CallbackQuery, callback_data: CallbackFactory, state: 
 
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.WHO_GIVES))
-async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext):
-    await db.update_user(call.from_user)
-    isMemberOrAdmin = await db.check_room_and_member(call.from_user.id, callback_data.room_iden)
-    room_name = f'{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}'
+async def who_gives(
+    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
+    room_name = f"{callback_data.room_iden[:-4]}:{callback_data.room_iden[-4:]}"
 
     async def safe_edit(text: str, markup):
         try:
@@ -158,7 +183,10 @@ async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: 
             raise
 
     if isMemberOrAdmin == "ROOM NOT EXISTS":
-        await safe_edit(messages.room_not_exists(room_name), await common_kb.ok_kb("None", asAdmin=False))
+        await safe_edit(
+            messages.room_not_exists(room_name),
+            await common_kb.ok_kb("None", asAdmin=False),
+        )
         return
 
     status = await db.isStarted(callback_data.room_iden)
@@ -170,7 +198,7 @@ async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: 
         return
 
     member_id = await db.who_gives(callback_data.room_iden, call.from_user.id)
-    if member_id == 'JOINED LATE':
+    if member_id == "JOINED LATE":
         await safe_edit(
             messages.event_started_before_join(room_name),
             await room_member_kb.room_member_kb(callback_data.room_iden),
@@ -182,5 +210,7 @@ async def who_gives(call: CallbackQuery, callback_data: CallbackFactory, state: 
         user_info = await text.create_user_info(member)
         await call.message.answer(
             messages.gift_target(user_info),
-            reply_markup=await room_member_kb.wishes_kb2(callback_data.room_iden, asAdmin=False),
+            reply_markup=await room_member_kb.wishes_kb2(
+                callback_data.room_iden, asAdmin=False
+            ),
         )
