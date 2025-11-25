@@ -5,6 +5,7 @@ from pydantic import AnyUrl, field_validator, Field
 class Settings(BaseSettings):
     bot_token: str = ""
     chat_id: int | None = Field(default=None, alias="CHAT_ID")
+    admin_id: int
 
     @field_validator("chat_id", mode="before")
     def _normalize_chat_id(cls, v):

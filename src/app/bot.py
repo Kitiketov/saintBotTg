@@ -14,6 +14,7 @@ from src.handlers import (
     debug,
     join_room,
     settings as room_settings,
+    admin_command,
 )
 
 
@@ -37,6 +38,7 @@ async def run_bot(token: str) -> None:
         debug.router,
         join_room.router,
         room_settings.router,
+        admin_command.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)

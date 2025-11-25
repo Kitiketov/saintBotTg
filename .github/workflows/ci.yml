@@ -27,6 +27,7 @@ jobs:
         env:
           BOT_TOKEN: dummy-token
           CHAT_ID: ${{ secrets.CHAT_ID || '0' }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
         run: |
           python -m pytest -q
 
@@ -89,4 +90,5 @@ jobs:
               -v /opt/saintbot/db/database.db:/app/src/db/database.db \
               -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
               -e CHAT_ID=${{ secrets.CHAT_ID }} \
+              -e ADMIN_ID=${{ secrets.ADMIN_ID }} \
               $IMAGE

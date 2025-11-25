@@ -418,6 +418,24 @@ async def update_room_settings(room_iden, price=None, event_time=None, exchange_
         )
 
     db.commit()
+
+
+async def get_stats():
+    total_users_raw = cur.execute("SELECT COUNT(*) FROM users").fetchone()
+    participants_raw = cur.execute(
+        "SELECT COUNT(DISTINCT tg_id) FROM user_rooms WHERE is_member = TRUE"
+    ).fetchone()
+    rooms_total_raw = cur.execute("SELECT COUNT(*) FROM rooms").fetchone()
+    started_rooms_raw = cur.execute(
+        "SELECT COUNT(*) FROM rooms WHERE status = TRUE"
+    ).fetchone()
+
+    total_users = total_users_raw[0] if total_users_raw else 0
+    participants = participants_raw[0] if participants_raw else 0
+    rooms_total = rooms_total_raw[0] if rooms_total_raw else 0
+    started_rooms = started_rooms_raw[0] if started_rooms_raw else 0
+
+    return total_users, participants, rooms_total, started_rooms
     return True
 
 
