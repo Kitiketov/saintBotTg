@@ -65,6 +65,16 @@ async def room_admin_kb(room_iden):
         ],
         [
             InlineKeyboardButton(
+                text="📝Кастомное приглашение",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.CUSTOM_INVITATION,
+                    room_iden=room_iden,
+                    asAdmin=True,
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="◀️Вернуться в меню",
                 callback_data=states.CallbackFactory(
                     action=CallbackAction.BACK_TO_MENU,
