@@ -20,6 +20,7 @@ class CallbackAction:
     SEE_WISHES = "see_wishes"
 
     CREATE_INVITATION = "create_invitation"
+    CUSTOM_INVITATION = "custom_invitation"
 
     START_EVENT = "start_event"
     DELETE_ROOM = "delete_room"

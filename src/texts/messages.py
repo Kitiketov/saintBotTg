@@ -144,9 +144,24 @@ def event_started_notify(room_name: str) -> str:
 
 def invitation_text(room_name: str) -> str:
     return (
-        f"✉️Приглашение принять участвие в Тайном санта в комнате {room_name}\n"
+        f"✉️Приглашение принять участвие в Тайном санта в комнате <code>{room_name}</code>\n"
         "<b>Если приглашение не сработало попробуйте присоединиться в ручном режиме</b>"
     )
+
+
+def prompt_custom_invitation(room_name: str) -> str:
+    return (
+        f"Отправьте текст приглашения для комнаты <code>{room_name}</code>\n"
+        "Можно добавить одно фото без альбома"
+    )
+
+
+def invitation_too_long() -> str:
+    return "Слишком длинное приглашение. Укоротите текст и отправьте новое"
+
+
+def invitation_empty() -> str:
+    return "Приглашение не распознано. Отправьте текст или фото с подписью"
 
 
 def room_not_exists_retry() -> str:
