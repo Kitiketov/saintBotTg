@@ -1,15 +1,23 @@
+import asyncio
+import base64
+
 from aiogram import F, Router
+from aiogram.exceptions import TelegramRetryAfter
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-import base64
+from src.config import logger
 from src.db import db
+from src.handlers.common import EFFECT_IDS
 from src.keyboards import common_kb, room_admin_kb
 from src.states.states import CallbackFactory, RemoveCallbackFactory
 from src.texts import messages, text
 from src.texts.callback_actions import CallbackAction
 from src.utilities import utils
+
+
+RATE_LIMIT_DELAY = 0.05
 
 
 async def get_room_name(room_iden):
@@ -152,8 +160,34 @@ async def start_event(
     )
 
     for user_id in members:
-        await call.bot.send_message(
-            chat_id=user_id,
-            text=messages.event_started_notify(room_name),
-            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
-        )
+        try:
+            await call.bot.send_message(
+                chat_id=user_id,
+                text=messages.event_started_notify(room_name),
+                reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+                message_effect_id=EFFECT_IDS["🎉"],
+            )
+        except TelegramRetryAfter as e:
+            await asyncio.sleep(e.retry_after)
+            try:
+                await call.bot.send_message(
+                    chat_id=user_id,
+                    text=messages.event_started_notify(room_name),
+                    reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+                    message_effect_id=EFFECT_IDS["🎉"],
+                )
+            except Exception as retry_error:
+                logger.warning(
+                    "Failed to notify user %s in room %s after retry: %s",
+                    user_id,
+                    callback_data.room_iden,
+                    retry_error,
+                )
+        except Exception as e:
+            logger.warning(
+                "Failed to notify user %s in room %s: %s",
+                user_id,
+                callback_data.room_iden,
+                e,
+            )
+        await asyncio.sleep(RATE_LIMIT_DELAY)
