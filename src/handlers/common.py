@@ -1,14 +1,20 @@
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, ReactionTypeEmoji
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery, ReactionTypeEmoji
 
-import base64
-from src.db import db
 from src.keyboards import common_kb
 from src.states.states import CallbackFactory
 from src.texts import messages
 from src.texts.callback_actions import CallbackAction
+
+EFFECT_IDS = {
+    '🔥': "5104841245755180586",
+    '👍': "5107584321108051014",
+    '👎': "5104858069142078462",
+    '❤️': "5044134455711629726",
+    '🎉': "5046509860389126442",
+    '💩': "5046589136895476101"
+}
 
 
 async def set_reaction(message: Message) -> None:
@@ -34,7 +40,7 @@ router = Router(name=__name__)
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.CANCEL))
 async def cancel(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     if callback_data.room_iden == "None":
         await state.clear()
