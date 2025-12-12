@@ -7,6 +7,7 @@ from src.middlewares import UpdateUserMiddleware
 from src.handlers import (
     legacy_route,
     common,
+    info,
     create_room,
     room_admin,
     wishes,
@@ -32,6 +33,7 @@ async def run_bot(token: str) -> None:
     dp.include_routers(
         legacy_route.router,
         common.router,
+        info.router,
         wishes.router,
         room_admin.router,
         create_room.router,

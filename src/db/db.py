@@ -12,36 +12,7 @@ ROOM_DEFAULT_EVENT_TIME = "не установлено"
 ROOM_DEFAULT_EXCHANGE_TYPE = "централизованый"
 
 
-async def start_db():
-    cur.execute(
-        "CREATE TABLE IF NOT EXISTS rooms("
-        "room_iden TEXT PRIMARY KEY,"
-        "status BOOLEAN DEFAULT FALSE,"
-        "admin INTEGER,"
-        "gift_price_range TEXT DEFAULT 'не установлен',"
-        "event_time TEXT DEFAULT 'не установлено',"
-        "exchange_type TEXT DEFAULT 'централизованый'"
-        ")"
-    )
-    cur.execute(
-        "CREATE TABLE IF NOT EXISTS users(tg_id INTEGER PRIMARY KEY,first_name TEXT,last_name TEXT,username TEXT)"
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS user_rooms(
-            tg_id INTEGER,
-            room_iden TEXT,
-            is_member BOOLEAN DEFAULT FALSE,
-            is_admin BOOLEAN DEFAULT FALSE,
-            PRIMARY KEY (tg_id, room_iden)
-        )
-        """
-    )
-    await migrate_rooms_table()
-    db.commit()
-
-
-async def create_room(room_name, user_id):
+def is_valid_name(name) -> bool:
     disvalid = [
         "_saint",
         "_mem",
@@ -76,11 +47,41 @@ async def create_room(room_name, user_id):
         "{",
         "}",
     ]
-    if (
-        all([a not in room_name for a in disvalid])
-        and room_name[0] not in "0123456789"
-        and len(room_name) <= 30
-    ):
+    return True if (
+                all([a not in name for a in disvalid]) and name[0] not in "0123456789" and len(name) <= 30) else False
+
+
+async def start_db():
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS rooms("
+        "room_iden TEXT PRIMARY KEY,"
+        "status BOOLEAN DEFAULT FALSE,"
+        "admin INTEGER,"
+        "gift_price_range TEXT DEFAULT 'не установлен',"
+        "event_time TEXT DEFAULT 'не установлено',"
+        "exchange_type TEXT DEFAULT 'централизованый'"
+        ")"
+    )
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS users(tg_id INTEGER PRIMARY KEY,first_name TEXT,last_name TEXT,username TEXT)"
+    )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS user_rooms(
+            tg_id INTEGER,
+            room_iden TEXT,
+            is_member BOOLEAN DEFAULT FALSE,
+            is_admin BOOLEAN DEFAULT FALSE,
+            PRIMARY KEY (tg_id, room_iden)
+        )
+        """
+    )
+    await migrate_rooms_table()
+    db.commit()
+
+
+async def create_room(room_name, user_id):
+    if is_valid_name(room_name):
         while True:
             room_id = f"{random.randint(1, 9999):04}"
             room_iden = f"{room_name}{room_id}"
@@ -141,7 +142,7 @@ async def connect2room(raw_data, user_id):
     _room = cur.execute(
         "SELECT * FROM rooms WHERE room_iden = ?", (room_iden,)
     ).fetchone()
-    if not _room:
+    if not _room or not is_valid_name(room_name):
         return "room_error"
     if _room[1] == True:
         return "joined late"
