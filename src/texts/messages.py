@@ -48,6 +48,13 @@ def event_not_started(room_name: str) -> str:
     return f"Событие в комнате {room_name} ещё не началось "
 
 
+def admin_not_member_start(room_name: str) -> str:
+    return (
+        f"Вы пока не участник комнаты {room_name}.\n"
+        "Добавить себя и участвовать в обмене или начать без вас?"
+    )
+
+
 def event_started_before_join(room_name: str) -> str:
     return (
         f"Событие в комнате {room_name} началось раньше вашего присоединения\n"
