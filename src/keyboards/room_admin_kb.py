@@ -105,6 +105,40 @@ async def room_admin_kb(room_iden):
     return InlineKeyboardMarkup(inline_keyboard=room_kb)
 
 
+async def start_event_confirm_kb(room_iden):
+    kb = [
+        [
+            InlineKeyboardButton(
+                text="👥Добавить меня и начать",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.START_EVENT_JOIN_ADMIN,
+                    room_iden=room_iden,
+                    asAdmin=True,
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="▶️Начать без меня",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.START_EVENT_SKIP_ADMIN,
+                    room_iden=room_iden,
+                    asAdmin=True,
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🚫Отмена",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.CANCEL, room_iden=room_iden, asAdmin=True
+                ).pack(),
+            )
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 async def confirm_kb(room_iden, asAdmin):
     confirm_kb = [
         [

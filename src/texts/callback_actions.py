@@ -23,6 +23,8 @@ class CallbackAction:
     CUSTOM_INVITATION = "custom_invitation"
 
     START_EVENT = "start_event"
+    START_EVENT_JOIN_ADMIN = "start_event_join_admin"
+    START_EVENT_SKIP_ADMIN = "start_event_skip_admin"
     DELETE_ROOM = "delete_room"
     CONFIRM_DELETE = "confirm_delete"
     REMOVE_MEMBER = "remove_member"

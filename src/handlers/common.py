@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, ReactionTypeEmoji
 
@@ -38,13 +39,24 @@ async def get_room_name(room_iden):
 router = Router(name=__name__)
 
 
+async def _delete_message_if_exists(message: Message) -> None:
+    if not message:
+        return
+
+    try:
+        await message.delete()
+    except TelegramBadRequest as exc:
+        if "message to delete not found" not in exc.message.lower():
+            raise
+
+
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.CANCEL))
 async def cancel(
         call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     if callback_data.room_iden == "None":
         await state.clear()
-    await call.message.delete()
+    await _delete_message_if_exists(call.message)
 
 
 @router.message(F.text == "◀️Вернуться в меню")
