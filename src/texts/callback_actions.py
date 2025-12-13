@@ -34,3 +34,5 @@ class CallbackAction:
     SET_ROOM_TYPE_CENTRAL = "set_room_type_central"
     SET_ROOM_TYPE_THROW = "set_room_type_throw"
     SHOW_ROOM_SETTINGS = "show_room_settings"
+
+    REMIND_ABOUT_EVENT = "remind_about_event"

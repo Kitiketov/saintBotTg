@@ -437,8 +437,11 @@ async def get_stats():
     started_rooms = started_rooms_raw[0] if started_rooms_raw else 0
 
     return total_users, participants, rooms_total, started_rooms
-    return True
 
+def get_all_users():
+    raw_users = cur.execute("SELECT DISTINCT tg_id FROM users").fetchall()
+    for user_id in raw_users:
+        yield user_id[0]
 
 if __name__ == "__main__":
     asyncio.run(start_db())

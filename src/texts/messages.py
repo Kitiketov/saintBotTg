@@ -141,6 +141,13 @@ def event_started(room_name: str) -> str:
 def event_started_notify(room_name: str) -> str:
     return f"Событие в комнате {room_name} началось\nПроверте кому вы дарите"
 
+def remind_notify(room_name: str) -> str:
+    return (
+        f"🔔 Напоминание: событие в комнате {room_name} уже идёт.\n"
+        "Зайдите в комнату и нажмите «🎁Кому я дарю», чтобы проверить получателя, "
+        "и подготовьте подарок."
+    )
+
 
 def invitation_text(room_name: str) -> str:
     return (
