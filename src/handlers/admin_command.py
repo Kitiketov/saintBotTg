@@ -8,6 +8,7 @@ from aiogram.types import Message, FSInputFile
 
 from src.config import settings, logger
 from src.db import db
+from src.utilities.notification import broadcast
 
 router = Router(name=__name__)
 
@@ -60,3 +61,9 @@ async def status(msg: Message):
         f"Комнат всего: {rooms_total}\n"
         f"Комнат с запущенным ивентом: {started_rooms}"
     )
+
+@router.message(Command("test"))
+async def test(msg: Message):
+    if not _is_admin(msg):
+        return
+    await broadcast(msg.bot,db.get_all_users(),"test",delay=0.1)

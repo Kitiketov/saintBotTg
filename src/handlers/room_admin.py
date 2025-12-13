@@ -1,23 +1,16 @@
-import asyncio
-import base64
-
 from aiogram import F, Router
-from aiogram.exceptions import TelegramRetryAfter
-from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery
 
-from src.config import logger
+from src.config import RATE_LIMIT_DELAY
 from src.db import db
 from src.handlers.common import EFFECT_IDS
 from src.keyboards import common_kb, room_admin_kb
 from src.states.states import CallbackFactory, RemoveCallbackFactory
-from src.texts import messages, text
+from src.texts import messages
 from src.texts.callback_actions import CallbackAction
+from src.utilities import notification
 from src.utilities import utils
-
-
-RATE_LIMIT_DELAY = 0.05
 
 
 async def get_room_name(room_iden):
@@ -29,7 +22,7 @@ router = Router(name=__name__)
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.DELETE_ROOM))
 async def delete_room(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
@@ -53,7 +46,7 @@ async def delete_room(
     CallbackFactory.filter(F.action == CallbackAction.CONFIRM_DELETE)
 )
 async def delete_room(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
@@ -75,7 +68,7 @@ async def delete_room(
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER))
 async def remove_member(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     members, *_ = await db.get_members_list(callback_data.room_iden)
 
@@ -87,7 +80,7 @@ async def remove_member(
     RemoveCallbackFactory.filter(F.action == CallbackAction.REMOVE_MEMBER)
 )
 async def removing_member(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     isMemberOrAdmin = await db.check_room_and_member(
         callback_data.user_id, callback_data.room_iden
@@ -117,7 +110,7 @@ async def removing_member(
 
 @router.callback_query(CallbackFactory.filter(F.action == CallbackAction.START_EVENT))
 async def start_event(
-    call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
 ):
     isMemberOrAdmin = await db.check_room_and_member(
         call.from_user.id, callback_data.room_iden
@@ -158,36 +151,54 @@ async def start_event(
         messages.event_started(room_name),
         reply_markup=await room_admin_kb.room_admin_kb(callback_data.room_iden),
     )
+    await notification.broadcast(call.bot, members,
+                                 text=messages.event_started_notify(room_name),
+                                 reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+                                 delay=RATE_LIMIT_DELAY,
+                                 message_effect_id=EFFECT_IDS["🎉"]
+                                 )
+    await call.answer("Уведомление о начале события отправлено")
 
-    for user_id in members:
-        try:
-            await call.bot.send_message(
-                chat_id=user_id,
-                text=messages.event_started_notify(room_name),
-                reply_markup=await common_kb.ok_kb("None", asAdmin=False),
-                message_effect_id=EFFECT_IDS["🎉"],
-            )
-        except TelegramRetryAfter as e:
-            await asyncio.sleep(e.retry_after)
-            try:
-                await call.bot.send_message(
-                    chat_id=user_id,
-                    text=messages.event_started_notify(room_name),
-                    reply_markup=await common_kb.ok_kb("None", asAdmin=False),
-                    message_effect_id=EFFECT_IDS["🎉"],
-                )
-            except Exception as retry_error:
-                logger.warning(
-                    "Failed to notify user %s in room %s after retry: %s",
-                    user_id,
-                    callback_data.room_iden,
-                    retry_error,
-                )
-        except Exception as e:
-            logger.warning(
-                "Failed to notify user %s in room %s: %s",
-                user_id,
-                callback_data.room_iden,
-                e,
-            )
-        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+@router.callback_query(CallbackFactory.filter(F.action == CallbackAction.REMIND_ABOUT_EVENT))
+async def remind_about_event(
+        call: CallbackQuery, callback_data: CallbackFactory, state: FSMContext
+):
+    isMemberOrAdmin = await db.check_room_and_member(
+        call.from_user.id, callback_data.room_iden
+    )
+    room_name = await get_room_name(callback_data.room_iden)
+
+    if isMemberOrAdmin == "ROOM NOT EXISTS":
+        await call.message.edit_text(
+            messages.room_not_exists(room_name),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+        )
+        return
+
+    if isMemberOrAdmin == "MEMBER NOT EXISTS":
+        await call.message.edit_text(
+            messages.not_a_member(room_name),
+            reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+        )
+        return
+
+    status = await db.isStarted(callback_data.room_iden)
+    if not status:
+        await call.message.edit_text(
+            messages.event_not_started(room_name),
+            reply_markup=await room_admin_kb.room_admin_kb(callback_data.room_iden),
+        )
+        return
+
+    members, admin, isAdminMember = await db.get_members_list(callback_data.room_iden)
+    if isAdminMember:
+        members.append(admin)
+
+    members = [member[0] for member in members]
+    await notification.broadcast(call.bot, members,
+                                 text=messages.remind_notify(room_name),
+                                 reply_markup=await common_kb.ok_kb("None", asAdmin=False),
+                                 delay=RATE_LIMIT_DELAY,
+                                 )
+    await call.answer("Напоминание отправлено")

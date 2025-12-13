@@ -27,6 +27,16 @@ async def room_admin_kb(room_iden):
         ],
         [
             InlineKeyboardButton(
+                text="🔔Напомнить всем о мероприятии",
+                callback_data=states.CallbackFactory(
+                    action=CallbackAction.REMIND_ABOUT_EVENT,
+                    room_iden=room_iden,
+                    asAdmin=True,
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="✏️Изменить настройки комнаты",
                 callback_data=states.CallbackFactory(
                     action=CallbackAction.EDIT_ROOM_SETTINGS,

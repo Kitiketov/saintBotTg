@@ -11,3 +11,5 @@ logging.basicConfig(
 
 settings = Settings()
 logger = logging.getLogger("saintbot")
+
+RATE_LIMIT_DELAY = 0.05
