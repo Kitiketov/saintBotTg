@@ -1,7 +1,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-available-blue)](https://hub.docker.com/r/...)
-[![Tests](https://github.com/Kitiketov/saintBotTg/actions/workflows/tests.yml/badge.svg)](https://github.com/Kitiketov/saintBotTg/actions)
+[![CI](https://github.com/Kitiketov/saintBotTg/actions/workflows/ci.yml/badge.svg)](https://github.com/Kitiketov/saintBotTg/actions/workflows/ci.yml)
 # SaintBotTg — Telegram‑бот для тайного Санты
 
 Бот на aiogram, который помогает собрать участников, обменять пожеланиями к подаркам и провести Тайного санту. 
